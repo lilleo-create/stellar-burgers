@@ -1,8 +1,8 @@
 import { setCookie, getCookie } from './cookie';
-import { TIngredient, TOrder, TOrdersData, TUser } from './types';
+import { TIngredient, TOrder, TUser } from './types';
 
 const URL = process.env.REACT_APP_BURGER_API_URL!;
-console.log('🌍 URL =', URL); // ← должно быть https://norma.nomoreparties.space/api
+console.log('🌍 URL =', URL);
 
 const checkResponse = <T>(res: Response): Promise<T> =>
   res.ok ? res.json() : res.json().then((err) => Promise.reject(err));
@@ -62,23 +62,22 @@ type TIngredientsResponse = TServerResponse<{
   data: TIngredient[];
 }>;
 
+// ✅ Исправленный fetchIngredientsApi
+export const fetchIngredientsApi = async (): Promise<TIngredient[]> => {
+  const res = await fetch(`${URL}/ingredients`);
+  if (!res.ok) {
+    throw new Error(`Ошибка при загрузке: ${res.status}`);
+  }
+
+  const data = await res.json(); // { success: true, data: [...] }
+  return data.data; // ✅ возвращаем массив
+};
+
 type TFeedsResponse = TServerResponse<{
   orders: TOrder[];
   total: number;
   totalToday: number;
 }>;
-
-type TOrdersResponse = TServerResponse<{
-  data: TOrder[];
-}>;
-
-export const getIngredientsApi = () =>
-  fetch(`${URL}/ingredients`)
-    .then((res) => checkResponse<TIngredientsResponse>(res))
-    .then((data) => {
-      if (data?.success) return data.data;
-      return Promise.reject(data);
-    });
 
 export const getFeedsApi = () =>
   fetch(`${URL}/orders/all`)

@@ -1,12 +1,12 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import { getIngredientsApi } from '../../utils/burger-api';
+import { fetchIngredientsApi } from '../../utils/burger-api';
 import { TIngredient } from '../../utils/types';
 
 export const fetchIngredients = createAsyncThunk(
   'ingredients/fetchIngredients',
   async () => {
     console.log('→ fetchIngredients вызван');
-    const res = await getIngredientsApi();
+    const res = await fetchIngredientsApi();
     console.log('→ Ответ API:', res);
     return res;
   }
@@ -16,12 +16,14 @@ export interface IngredientsState {
   items: TIngredient[];
   isLoading: boolean;
   error: string | null;
+  currentIngredient: TIngredient | null;
 }
 
 const initialState: IngredientsState = {
   items: [],
   isLoading: false,
-  error: null
+  error: null,
+  currentIngredient: null
 };
 
 const ingredientsSlice = createSlice({

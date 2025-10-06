@@ -10,11 +10,10 @@ export const IngredientsCategory = forwardRef<
 >(({ title, titleRef, ingredients }, ref) => {
   const constructorItems = useAppSelector((state) => state.constructor);
 
-
   const ingredientsCounters = useMemo(() => {
-    const { bun, ingredients } = constructorItems;
+    const { bun, ingredients: selectedIngredients } = constructorItems;
     const counters: { [key: string]: number } = {};
-    ingredients.forEach((ingredient: TIngredient) => {
+    selectedIngredients?.forEach((ingredient: TIngredient) => {
       if (!counters[ingredient._id]) counters[ingredient._id] = 0;
       counters[ingredient._id]++;
     });

@@ -7,7 +7,9 @@ import { useAppSelector } from '../../services/store';
 
 export const OrderInfo: FC = () => {
   const orderData = useAppSelector((state) => state.order.orderData);
-  const ingredients: TIngredient[] = useAppSelector((state) => state.ingredients.items);
+  const ingredients: TIngredient[] = useAppSelector(
+    (state) => state.ingredients.items
+  );
 
   const orderInfo = useMemo(() => {
     if (!orderData || !ingredients.length) return null;

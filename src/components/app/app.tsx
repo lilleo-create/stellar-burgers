@@ -3,6 +3,7 @@ import { ConstructorPage } from '../../pages/constructor-page';
 import { Feed } from '../../pages/feed';
 import { Login } from '../../pages/login';
 import { Register } from '../../pages/register';
+import { AppHeader } from '../app-header/app-header';
 import { ForgotPassword } from '../../pages/forgot-password';
 import { ResetPassword } from '../../pages/reset-password';
 import { Profile } from '../../pages/profile';
@@ -20,9 +21,9 @@ function App() {
   const handleModalClose = () => {
     navigate(-1);
   };
-
   return (
     <>
+      <AppHeader /> {/* ✅ теперь он точно появится */}
       <Routes location={background || location}>
         <Route path='/' element={<ConstructorPage />} />
         <Route path='/feed' element={<Feed />} />
@@ -34,7 +35,6 @@ function App() {
         <Route path='/profile/orders' element={<ProfileOrders />} />
         <Route path='*' element={<NotFound404 />} />
       </Routes>
-
       {/* модалки временно отключены */}
       {/* 
       {background && (

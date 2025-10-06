@@ -19,6 +19,7 @@ export const IngredientsCategoryUI = forwardRef<
           count={ingredientsCounters[ingredient._id]}
         />
       ))}
+      console.log('👉 ingredients', ingredients);
     </ul>
   </>
 ));
