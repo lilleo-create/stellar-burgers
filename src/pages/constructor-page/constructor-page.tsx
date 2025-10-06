@@ -1,5 +1,4 @@
-// src/pages/constructor-page/constructor-page.tsx
-import { useEffect } from 'react';
+import { FC, useEffect } from 'react';
 import { useAppDispatch, useAppSelector } from '../../services/store';
 import { fetchIngredients } from '../../services/slices/ingredientsSlice';
 
@@ -8,19 +7,18 @@ import { BurgerIngredients } from '../../components';
 import { BurgerConstructor } from '../../components';
 import { Preloader } from '../../components/ui';
 
-export const ConstructorPage = () => {
+export const ConstructorPage: FC = () => {
   const dispatch = useAppDispatch();
   const { items, isLoading, error } = useAppSelector(
     (state) => state.ingredients
   );
 
   useEffect(() => {
-    dispatch(fetchIngredients());
-  }, [dispatch]);
-
-  if (isLoading) return <Preloader />;
-  if (error)
-    return <p className='text text_type_main-default text-center'>{error}</p>;
+    if (items.length === 0) {
+      dispatch(fetchIngredients());
+    }
+  }, [dispatch, items.length]);
+  console.log('ingredients', items);
 
   return (
     <main className={styles.containerMain}>
@@ -29,11 +27,21 @@ export const ConstructorPage = () => {
       >
         Соберите бургер
       </h1>
+
       <div className={`${styles.main} pl-5 pr-5`}>
-        <BurgerIngredients />
-        <BurgerConstructor />
+        {isLoading && <Preloader />}
+        {error && (
+          <p className='text text_type_main-default text-center'>{error}</p>
+        )}
+        {!isLoading && !error && (
+          <>
+            <BurgerIngredients />
+            <BurgerConstructor />
+          </>
+        )}
       </div>
     </main>
   );
 };
+
 export default ConstructorPage;

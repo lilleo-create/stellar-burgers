@@ -8,7 +8,7 @@ export const fetchIngredients = createAsyncThunk(
     console.log('→ fetchIngredients вызван');
     const res = await getIngredientsApi();
     console.log('→ Ответ API:', res);
-    return res.data;
+    return res;
   }
 );
 
@@ -36,7 +36,7 @@ const ingredientsSlice = createSlice({
       })
       .addCase(fetchIngredients.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.items = action.payload; // ✅ заполняем items
+        state.items = action.payload;
       })
       .addCase(fetchIngredients.rejected, (state, action) => {
         state.isLoading = false;

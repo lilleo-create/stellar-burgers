@@ -1,36 +1,44 @@
+// src/components/burger-constructor/burger-constructor.tsx
 import { FC, useMemo } from 'react';
-import { TConstructorIngredient } from '@utils-types';
-import { BurgerConstructorUI } from '@ui';
+import { useAppSelector, useAppDispatch } from '../../services/store';
+import { BurgerConstructorUI } from '../ui/burger-constructor';
+import { sendOrder, closeOrderModal } from '../../services/slices/orderSlice';
 
 export const BurgerConstructor: FC = () => {
-  /** TODO: взять переменные constructorItems, orderRequest и orderModalData из стора */
-  const constructorItems = {
-    bun: {
-      price: 0
-    },
-    ingredients: []
-  };
+  const dispatch = useAppDispatch();
 
-  const orderRequest = false;
+  // ✅ Берём данные из state.constructor (не state.constructorItems!)
+  const constructorItems = useAppSelector((state) => state.constructor);
+  const orderRequest = useAppSelector((state) => state.order.orderRequest);
+  const orderModalData = useAppSelector((state) => state.order.orderModalData);
 
-  const orderModalData = null;
+  // ✅ Считаем цену с типизацией
+  const price = useMemo(() => {
+    const bunPrice = constructorItems.bun ? constructorItems.bun.price * 2 : 0;
+    const ingredientsPrice = constructorItems.ingredients.reduce(
+      (sum: number, item) => sum + item.price,
+      0
+    );
+    return bunPrice + ingredientsPrice;
+  }, [constructorItems]);
 
+  // ✅ Отправка заказа
   const onOrderClick = () => {
     if (!constructorItems.bun || orderRequest) return;
+
+    const ingredientIds = [
+      constructorItems.bun._id,
+      ...constructorItems.ingredients.map((item) => item._id),
+      constructorItems.bun._id
+    ];
+
+    dispatch(sendOrder(ingredientIds));
   };
-  const closeOrderModal = () => {};
 
-  const price = useMemo(
-    () =>
-      (constructorItems.bun ? constructorItems.bun.price * 2 : 0) +
-      constructorItems.ingredients.reduce(
-        (s: number, v: TConstructorIngredient) => s + v.price,
-        0
-      ),
-    [constructorItems]
-  );
-
-  return null;
+  // ✅ Закрыть модалку
+  const handleCloseModal = () => {
+    dispatch(closeOrderModal());
+  };
 
   return (
     <BurgerConstructorUI
@@ -39,7 +47,7 @@ export const BurgerConstructor: FC = () => {
       constructorItems={constructorItems}
       orderModalData={orderModalData}
       onOrderClick={onOrderClick}
-      closeOrderModal={closeOrderModal}
+      closeOrderModal={handleCloseModal}
     />
   );
 };
