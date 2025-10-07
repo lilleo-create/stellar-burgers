@@ -1,73 +1,61 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { TConstructorIngredient, TOrder } from '../../utils/types';
+import { TConstructorIngredient } from '../../utils/types';
+import { v4 as uuidv4 } from 'uuid';
 
-// 🔹 Тип состояния конструктора
-interface ConstructorState {
+type ConstructorState = {
   bun: TConstructorIngredient | null;
-  ingredients: TConstructorIngredient[];
-  orderRequest: boolean;
-  orderModalData: TOrder | null;
-}
-
-// 🔹 Начальное состояние
-const initialState: ConstructorState = {
-  bun: null,
-  ingredients: [],
-  orderRequest: false,
-  orderModalData: null
+  ingredients: (TConstructorIngredient & { uuid: string })[];
 };
 
-// 🔹 Срез состояния (slice)
-const constructorSlice = createSlice({
-  name: 'constructor',
+const initialState: ConstructorState = {
+  bun: null,
+  ingredients: []
+};
+
+const burgerConstructorSlice = createSlice({
+  name: 'burgerConstructor',
   initialState,
   reducers: {
-    // Устанавливаем булку
     setBun(state, action: PayloadAction<TConstructorIngredient>) {
       state.bun = action.payload;
     },
-
-    // Добавляем ингредиент
     addIngredient(state, action: PayloadAction<TConstructorIngredient>) {
-      state.ingredients.push(action.payload);
+      state.ingredients.push({ ...action.payload, uuid: uuidv4() });
     },
-
-    // Удаляем ингредиент по id
     removeIngredient(state, action: PayloadAction<string>) {
       state.ingredients = state.ingredients.filter(
-        (item) => item._id !== action.payload
+        (item) => item.uuid !== action.payload
       );
     },
-
-    // Полностью очищаем конструктор
+    moveIngredient(
+      state,
+      action: PayloadAction<{ fromIndex: number; toIndex: number }>
+    ) {
+      const { fromIndex, toIndex } = action.payload;
+      if (
+        fromIndex < 0 ||
+        toIndex < 0 ||
+        fromIndex >= state.ingredients.length ||
+        toIndex >= state.ingredients.length
+      ) {
+        return;
+      }
+      const [dragged] = state.ingredients.splice(fromIndex, 1);
+      state.ingredients.splice(toIndex, 0, dragged);
+    },
     clearConstructor(state) {
       state.bun = null;
       state.ingredients = [];
-      state.orderRequest = false;
-      state.orderModalData = null;
-    },
-
-    // Устанавливаем флаг загрузки заказа
-    setOrderRequest(state, action: PayloadAction<boolean>) {
-      state.orderRequest = action.payload;
-    },
-
-    // Сохраняем данные заказа для модалки
-    setOrderModalData(state, action: PayloadAction<TOrder | null>) {
-      state.orderModalData = action.payload;
     }
   }
 });
 
-// 🔹 Экспорт экшенов
 export const {
   setBun,
   addIngredient,
   removeIngredient,
   clearConstructor,
-  setOrderRequest,
-  setOrderModalData
-} = constructorSlice.actions;
+  moveIngredient
+} = burgerConstructorSlice.actions;
 
-// 🔹 Экспорт редьюсера по умолчанию
-export default constructorSlice.reducer;
+export default burgerConstructorSlice.reducer;

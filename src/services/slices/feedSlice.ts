@@ -1,4 +1,3 @@
-// src/services/slices/feed.ts
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { TOrder } from '../../utils/types';
 
@@ -19,7 +18,10 @@ const feedSlice = createSlice({
   initialState,
   reducers: {
     setFeed(state, action: PayloadAction<FeedState>) {
-      return action.payload;
+      // ✅ мутируем draft, а не возвращаем объект
+      state.orders = action.payload.orders;
+      state.totalData = action.payload.totalData;
+      state.totalToday = action.payload.totalToday;
     }
   }
 });

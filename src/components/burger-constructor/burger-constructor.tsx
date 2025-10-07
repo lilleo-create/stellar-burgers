@@ -9,7 +9,7 @@ export const BurgerConstructor: FC = () => {
   const dispatch = useAppDispatch();
 
   // Берём из стора конструктор, запрос и данные модалки
-  const constructorItems = useAppSelector((state) => state.constructor);
+  const constructorItems = useAppSelector((state) => state.burgerConstructor);
   const orderRequest = useAppSelector((state) => state.order.orderRequest);
   const orderModalData = useAppSelector((state) => state.order.orderModalData);
 

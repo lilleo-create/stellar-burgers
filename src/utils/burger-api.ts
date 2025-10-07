@@ -68,9 +68,8 @@ export const fetchIngredientsApi = async (): Promise<TIngredient[]> => {
   if (!res.ok) {
     throw new Error(`Ошибка при загрузке: ${res.status}`);
   }
-
-  const data = await res.json(); // { success: true, data: [...] }
-  return data.data; // ✅ возвращаем массив
+  const json = await res.json(); // { success: true, data: [...] }
+  return json.data; // ✅ возвращаем массив
 };
 
 type TFeedsResponse = TServerResponse<{

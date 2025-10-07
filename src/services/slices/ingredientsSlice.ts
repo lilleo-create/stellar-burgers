@@ -2,13 +2,13 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { fetchIngredientsApi } from '../../utils/burger-api';
 import { TIngredient } from '../../utils/types';
 
-export const fetchIngredients = createAsyncThunk(
+export const fetchIngredients = createAsyncThunk<TIngredient[]>(
   'ingredients/fetchIngredients',
   async () => {
     console.log('→ fetchIngredients вызван');
-    const res = await fetchIngredientsApi();
-    console.log('→ Ответ API:', res);
-    return res;
+    const data = await fetchIngredientsApi();
+    console.log('→ Ответ API:', data);
+    return data; // ✅ возвращаем массив
   }
 );
 
@@ -38,7 +38,7 @@ const ingredientsSlice = createSlice({
       })
       .addCase(fetchIngredients.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.items = action.payload;
+        state.items = action.payload; // ✅ payload — массив
       })
       .addCase(fetchIngredients.rejected, (state, action) => {
         state.isLoading = false;

@@ -1,10 +1,10 @@
 import { FC, memo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAppDispatch } from '../../services/store'; // ✅ правильный импорт
-import { addIngredient } from '../../services/slices/constructorSlice'; // ✅ правильный путь
-import { nanoid } from 'nanoid';
+import { useAppDispatch } from '../../services/store';
+import { addIngredient, setBun } from '../../services/slices/constructorSlice';
 import { BurgerIngredientUI } from '@ui';
 import { TBurgerIngredientProps } from './type';
+import { TIngredient, TConstructorIngredient } from '@utils-types';
 
 export const BurgerIngredient: FC<TBurgerIngredientProps> = memo(
   ({ ingredient, count }) => {
@@ -12,7 +12,12 @@ export const BurgerIngredient: FC<TBurgerIngredientProps> = memo(
     const dispatch = useAppDispatch();
 
     const handleAdd = () => {
-      dispatch(addIngredient({ ...ingredient, id: nanoid() }));
+      if (ingredient.type === 'bun') {
+        // 🧩 кастим TIngredient → TConstructorIngredient, чтобы TS не ругался
+        dispatch(setBun(ingredient as TConstructorIngredient));
+      } else {
+        dispatch(addIngredient(ingredient as TConstructorIngredient));
+      }
     };
 
     return (
