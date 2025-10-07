@@ -1,8 +1,8 @@
 import { FC, memo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { useAppDispatch } from '../../services/store';
-import { addIngredient } from '../../services/slices/constructor';
-
+import { useAppDispatch } from '../../services/store'; // ✅ правильный импорт
+import { addIngredient } from '../../services/slices/constructorSlice'; // ✅ правильный путь
+import { nanoid } from 'nanoid';
 import { BurgerIngredientUI } from '@ui';
 import { TBurgerIngredientProps } from './type';
 
@@ -12,7 +12,7 @@ export const BurgerIngredient: FC<TBurgerIngredientProps> = memo(
     const dispatch = useAppDispatch();
 
     const handleAdd = () => {
-      dispatch(addIngredient(ingredient));
+      dispatch(addIngredient({ ...ingredient, id: nanoid() }));
     };
 
     return (

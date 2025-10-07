@@ -48,7 +48,6 @@ export const BurgerIngredients: FC = () => {
     if (tab === 'sauce')
       titleSaucesRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
-  console.log('BurgerIngredients отрисован');
 
   return (
     <BurgerIngredientsUI
@@ -63,6 +62,7 @@ export const BurgerIngredients: FC = () => {
       mainsRef={mainsRef}
       saucesRef={saucesRef}
       onTabClick={onTabClick}
+      
     />
   );
 };
