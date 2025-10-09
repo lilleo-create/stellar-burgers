@@ -206,6 +206,8 @@ export const resetPasswordApi = (data: { password: string; token: string }) =>
 type TUserResponse = TServerResponse<{ user: TUser }>;
 
 export const getUserApi = () =>
+  console.log('🔁 getUserApi called');
+
   fetchWithRefresh<TUserResponse>(`${URL}/auth/user`, {
     headers: {
       authorization: getCookie('accessToken')
