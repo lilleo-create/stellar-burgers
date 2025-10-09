@@ -26,8 +26,6 @@ function App() {
   useEffect(() => {
     dispatch(checkUserAuth());
   }, [dispatch]);
-
-  // если в location есть background — значит, модалка открывается поверх
   const background = location.state?.background;
 
   const handleModalClose = () => {
@@ -47,7 +45,10 @@ function App() {
         <Route path='/ingredients/:id' element={<IngredientDetails />} />
 
         {/* Только для НЕавторизованных */}
-        <Route path='/login' element={<ProtectedRoute onlyUnAuth element={<Login />} />} />
+        <Route
+          path='/login'
+          element={<ProtectedRoute onlyUnAuth element={<Login />} />}
+        />
         <Route
           path='/register'
           element={<ProtectedRoute onlyUnAuth element={<Register />} />}
@@ -62,7 +63,10 @@ function App() {
         />
 
         {/* Только для авторизованных */}
-        <Route path='/profile' element={<ProtectedRoute element={<Profile />} />} />
+        <Route
+          path='/profile'
+          element={<ProtectedRoute element={<Profile />} />}
+        />
         <Route
           path='/profile/orders'
           element={<ProtectedRoute element={<ProfileOrders />} />}

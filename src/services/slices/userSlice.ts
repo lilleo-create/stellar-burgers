@@ -1,4 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+
 import {
   getUserApi,
   loginUserApi,
@@ -28,10 +29,11 @@ export const checkUserAuth = createAsyncThunk(
   'user/checkAuth',
   async (_, { rejectWithValue }) => {
     try {
-      const res = await getUserApi(); // ✅ вызываем API напрямую
+      const res = await getUserApi();
       return res.user;
-    } catch (err) {
-      return rejectWithValue('Auth check failed');
+    } catch (err: any) {
+      console.warn('Auth check failed:', err);
+      return rejectWithValue(null); // не бросаем ошибку в React
     }
   }
 );
@@ -71,7 +73,17 @@ export const registerUser = createAsyncThunk(
     }
   }
 );
-
+export const getUser = createAsyncThunk(
+  'user/getUser',
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await getUserApi(); // ✅ запрос к /auth/user
+      return res.user;
+    } catch (err) {
+      return rejectWithValue('Get user failed');
+    }
+  }
+);
 //
 // === Обновление данных профиля ===
 //
@@ -110,6 +122,14 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // getUser
+      .addCase(getUser.fulfilled, (state, action) => {
+        state.user = action.payload;
+      })
+      .addCase(getUser.rejected, (state) => {
+        state.user = null;
+      })
+
       // checkAuth
       .addCase(checkUserAuth.fulfilled, (state, action) => {
         state.user = action.payload;

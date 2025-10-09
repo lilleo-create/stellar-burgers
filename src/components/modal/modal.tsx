@@ -9,9 +9,7 @@ const modalRoot = document.getElementById('modals');
 export const Modal: FC<TModalProps> = memo(({ title, onClose, children }) => {
   useEffect(() => {
     const handleEsc = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
+      e.key === 'Escape' && onClose();
     };
 
     document.addEventListener('keydown', handleEsc);
@@ -20,13 +18,10 @@ export const Modal: FC<TModalProps> = memo(({ title, onClose, children }) => {
     };
   }, [onClose]);
 
-  // ✅ защита от ошибки если контейнер не найден
-  if (!modalRoot) return null;
-
   return ReactDOM.createPortal(
     <ModalUI title={title} onClose={onClose}>
       {children}
     </ModalUI>,
-    modalRoot
+    modalRoot as HTMLDivElement
   );
 });
