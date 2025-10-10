@@ -1,16 +1,22 @@
-// src/index.tsx
-import ReactDOM from 'react-dom';
-import './index.css';
-import App from './components/app/app';
+import React from 'react';
+import { createRoot } from 'react-dom/client';
 import { Provider } from 'react-redux';
-import { store } from './services/store';
 import { BrowserRouter } from 'react-router-dom';
+import App from './components/app/app';
+import { store } from './services/store';
+import './index.css';
 
-ReactDOM.render(
-  <BrowserRouter>
+const container = document.getElementById('root');
+if (!container) throw new Error('❌ Root container not found in index.html');
+
+const root = createRoot(container);
+
+root.render(
+  <React.StrictMode>
     <Provider store={store}>
-      <App />
+      <BrowserRouter>
+        <App />
+      </BrowserRouter>
     </Provider>
-  </BrowserRouter>,
-  document.getElementById('root')
+  </React.StrictMode>
 );

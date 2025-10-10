@@ -24,7 +24,6 @@ const initialState: UserState = {
 
 //
 // === Проверка авторизации при загрузке приложения ===
-//
 export const checkUserAuth = createAsyncThunk(
   'user/checkAuth',
   async (_, { rejectWithValue }) => {
@@ -32,8 +31,19 @@ export const checkUserAuth = createAsyncThunk(
       const res = await getUserApi();
       return res.user;
     } catch (err: any) {
-      console.warn('Auth check failed:', err);
-      return rejectWithValue(null); // не бросаем ошибку в React
+      console.warn('❌ Auth check failed:', err);
+
+      // Удаляем токены только если refreshToken уже невалиден
+      if (
+        err?.message?.includes('jwt expired') ||
+        err?.message?.includes('invalid token') ||
+        err?.message?.includes('token missing')
+      ) {
+        localStorage.removeItem('refreshToken');
+        document.cookie = 'accessToken=; Max-Age=0; path=/;';
+      }
+
+      return rejectWithValue('Auth failed');
     }
   }
 );

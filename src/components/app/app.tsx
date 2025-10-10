@@ -21,11 +21,12 @@ function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-
-  // 👇 Проверяем токен при загрузке приложения
+  
   useEffect(() => {
     dispatch(checkUserAuth());
   }, [dispatch]);
+  
+  // 👇 Проверяем токен при загрузке приложения
   const background = location.state?.background;
 
   const handleModalClose = () => {

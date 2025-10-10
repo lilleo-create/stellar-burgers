@@ -41,8 +41,14 @@ export const AppHeaderUI: FC<TAppHeaderUIProps> = ({
         </div>
       </div>
 
-      <div className={styles.logo} onClick={onConstructorClick}>
-        <Logo className='' />
+      {/* ✅ Исправлено: добавлен обязательный className */}
+      <div
+        className={styles.logo}
+        onClick={onConstructorClick}
+        role='button'
+        tabIndex={0}
+      >
+        <Logo className={styles.logoIcon} />
       </div>
 
       <div

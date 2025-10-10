@@ -6,18 +6,17 @@ export const AppHeader: FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleNavigate = (path: string) => {
-    navigate(path);
-  };
+  const handleConstructorClick = () => navigate('/');
+  const handleFeedClick = () => navigate('/feed');
+  const handleProfileClick = () => navigate('/profile');
 
   return (
     <AppHeaderUI
-      userName=''
-      // пробрасываем обработчики в UI
-      onConstructorClick={() => handleNavigate('/')}
-      onFeedClick={() => handleNavigate('/feed')}
-      onProfileClick={() => handleNavigate('/profile')}
-      activePath={location.pathname} // можно для подсветки
+      userName='' // или user?.name из Redux, если хочешь
+      onConstructorClick={handleConstructorClick}
+      onFeedClick={handleFeedClick}
+      onProfileClick={handleProfileClick}
+      activePath={location.pathname}
     />
   );
 };
