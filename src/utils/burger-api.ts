@@ -1,44 +1,45 @@
 import { setCookie, getCookie } from './cookie';
-import { TIngredient, TOrder, TUser } from './types';
+import { TIngredient, TOrder, TUser, TUserResponse } from './types';
 
-const URL = process.env.REACT_APP_BURGER_API_URL!;
+const URL =
+  process.env.REACT_APP_BURGER_API_URL ||
+  'https://norma.nomoreparties.space/api';
 
-// ================== ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ==================
+const checkResponse = async <T>(res: unknown): Promise<T> => {
+  // Принудительно говорим TS, что это именно Response
+  const response = res as Response;
 
-const checkResponse = async <T>(res: Response): Promise<T> => {
-  const data = await res.json().catch(() => ({}));
-  if (!res.ok) {
+  let data: any;
+  try {
+    data = await response.json();
+  } catch {
+    data = {};
+  }
+
+  if (!response.ok) {
     const message =
-      typeof (data as any).message === 'string'
-        ? (data as any).message
-        : `Ошибка ${res.status}: ${res.statusText}`;
+      typeof data?.message === 'string'
+        ? data.message
+        : `Ошибка ${response.status}: ${response.statusText}`;
     throw new Error(message);
   }
-  return data;
+
+  return data as T;
 };
 
-type TServerResponse<T> = {
+// ======================== REFRESH TOKEN ========================
+type TRefreshResponse = {
   success: boolean;
-} & T;
-
-// тип ответа при обновлении токена
-type TRefreshResponse = TServerResponse<{
   refreshToken: string;
   accessToken: string;
-}>;
-
-// ================== ОБНОВЛЕНИЕ ТОКЕНА ==================
+};
 
 export const refreshToken = (): Promise<TRefreshResponse> =>
   fetch(`${URL}/auth/token`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json;charset=utf-8' },
-    body: JSON.stringify({
-      token: localStorage.getItem('refreshToken')
-    })
+    body: JSON.stringify({ token: localStorage.getItem('refreshToken') })
   }).then((res) => checkResponse<TRefreshResponse>(res));
-
-// ================== ОБЕРТКА С ОБНОВЛЕНИЕМ ТОКЕНА ==================
 
 export const fetchWithRefresh = async <T>(
   url: string,
@@ -49,37 +50,33 @@ export const fetchWithRefresh = async <T>(
     return await checkResponse<T>(res);
   } catch (err: any) {
     if (err.message === 'jwt expired' || err.message === 'jwt malformed') {
-      const refreshData = await refreshToken();
-
-      if (!refreshData.success) return Promise.reject(refreshData);
+      const refreshData: TRefreshResponse = await refreshToken();
 
       localStorage.setItem('refreshToken', refreshData.refreshToken);
       setCookie('accessToken', refreshData.accessToken.split('Bearer ')[1]);
 
+      // ✅ Исправлено: добавляем Bearer
       const res = await fetch(url, {
         ...options,
         headers: {
           ...options.headers,
-          Authorization: refreshData.accessToken
+          Authorization: 'Bearer ' + refreshData.accessToken.split('Bearer ')[1]
         }
       });
 
       return await checkResponse<T>(res);
-    } else {
-      return Promise.reject(err);
     }
+
+    return Promise.reject(err);
   }
 };
 
-// ================== АВТОРИЗАЦИЯ ==================
-
-export type TRegisterData = {
+// ======================== AUTH ========================
+export const registerUserApi = (data: {
   name: string;
   email: string;
   password: string;
-};
-
-export const registerUserApi = (data: TRegisterData) =>
+}) =>
   fetch(`${URL}/auth/register`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json;charset=utf-8' },
@@ -95,12 +92,7 @@ export const registerUserApi = (data: TRegisterData) =>
       return Promise.reject(data);
     });
 
-export type TLoginData = {
-  email: string;
-  password: string;
-};
-
-export const loginUserApi = (data: TLoginData) =>
+export const loginUserApi = (data: { email: string; password: string }) =>
   fetch(`${URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json;charset=utf-8' },
@@ -108,6 +100,7 @@ export const loginUserApi = (data: TLoginData) =>
   })
     .then((res) => checkResponse<any>(res))
     .then((data) => {
+      fetchWithRefresh;
       if (data.success) {
         setCookie('accessToken', data.accessToken.split('Bearer ')[1]);
         localStorage.setItem('refreshToken', data.refreshToken);
@@ -116,16 +109,14 @@ export const loginUserApi = (data: TLoginData) =>
       return Promise.reject(data);
     });
 
-// ================== ПРОФИЛЬ ==================
-
-export const getUserApi = () =>
-  fetchWithRefresh(`${URL}/auth/user`, {
+export const getUserApi = (): Promise<TUserResponse> =>
+  fetch(`${URL}/auth/user`, {
     method: 'GET',
     headers: {
-      'Content-Type': 'application/json;charset=utf-8',
-      Authorization: 'Bearer ' + getCookie('accessToken')
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${getCookie('accessToken')}`
     }
-  });
+  }).then((res) => checkResponse<TUserResponse>(res));
 
 export const updateUserApi = (data: Partial<TUser>) =>
   fetchWithRefresh(`${URL}/auth/user`, {
@@ -141,7 +132,44 @@ export const logoutApi = () =>
   fetch(`${URL}/auth/logout`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json;charset=utf-8' },
-    body: JSON.stringify({
-      token: localStorage.getItem('refreshToken')
-    })
+    body: JSON.stringify({ token: localStorage.getItem('refreshToken') })
   }).then((res) => checkResponse<any>(res));
+
+// ======================== PASSWORD ========================
+export const forgotPasswordApi = (data: { email: string }) =>
+  fetch(`${URL}/password-reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json;charset=utf-8' },
+    body: JSON.stringify(data)
+  }).then((res) => checkResponse<any>(res));
+
+export const resetPasswordApi = (data: { password: string; token: string }) =>
+  fetch(`${URL}/password-reset/reset`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json;charset=utf-8' },
+    body: JSON.stringify(data)
+  }).then((res) => checkResponse<any>(res));
+
+// ======================== INGREDIENTS ========================
+export const fetchIngredientsApi = async (): Promise<TIngredient[]> => {
+  const res = await fetch(`${URL}/ingredients`);
+  const data = await checkResponse<{ data: TIngredient[] }>(res);
+  return data.data;
+};
+
+// ======================== ORDERS ========================
+export const orderBurgerApi = (ingredients: string[]) =>
+  fetchWithRefresh<{ order: TOrder }>(`${URL}/orders`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json;charset=utf-8',
+      Authorization: 'Bearer ' + getCookie('accessToken')
+    },
+    body: JSON.stringify({ ingredients })
+  });
+
+// ======================== FEED ========================
+export const getFeedsApi = () =>
+  fetch(`${URL}/orders/all`).then((res) =>
+    checkResponse<{ orders: TOrder[]; total: number; totalToday: number }>(res)
+  );

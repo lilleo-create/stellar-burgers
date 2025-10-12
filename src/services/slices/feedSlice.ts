@@ -37,12 +37,13 @@ const feedSlice = createSlice({
       })
       .addCase(getFeeds.fulfilled, (state, action) => {
         state.feedRequest = false;
-        state.orders = action.payload.orders;
+        state.orders = action.payload.orders || []; // ✅ fallback на []
         state.totalData = {
           total: action.payload.total,
           totalToday: action.payload.totalToday
         };
       })
+
       .addCase(getFeeds.rejected, (state) => {
         state.feedRequest = false;
         state.error = 'Ошибка загрузки ленты заказов';

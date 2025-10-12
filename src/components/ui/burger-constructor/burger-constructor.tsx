@@ -20,7 +20,7 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
 }) => {
   const bun = constructorItems.bun;
   const ingredients = constructorItems.ingredients;
-
+  type IngredientWithUuid = TConstructorIngredient & { uuid: string };
   return (
     <section className={styles.burger_constructor}>
       {/* Верхняя булка */}
@@ -45,12 +45,12 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
       {/* Начинка (между булками) */}
       <ul className={styles.elements}>
         {ingredients?.length > 0 ? (
-          ingredients.map((item: TConstructorIngredient, index: number) => (
+          (ingredients as IngredientWithUuid[]).map((item, index) => (
             <BurgerConstructorElement
               ingredient={item}
               index={index}
               totalItems={ingredients.length}
-              key={item._id}
+              key={item.uuid}
             />
           ))
         ) : (

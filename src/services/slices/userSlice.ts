@@ -28,7 +28,7 @@ export const checkUserAuth = createAsyncThunk(
   'user/checkAuth',
   async (_, { rejectWithValue }) => {
     try {
-      const res = await getUserApi();
+      const res = (await getUserApi()) as { user: TUser };
       return res.user;
     } catch (err: any) {
       console.warn('❌ Auth check failed:', err);
@@ -87,7 +87,7 @@ export const getUser = createAsyncThunk(
   'user/getUser',
   async (_, { rejectWithValue }) => {
     try {
-      const res = await getUserApi(); // ✅ запрос к /auth/user
+      const res = (await getUserApi()) as { user: TUser };
       return res.user;
     } catch (err) {
       return rejectWithValue('Get user failed');
@@ -101,7 +101,7 @@ export const updateUser = createAsyncThunk(
   'user/update',
   async (formData: Partial<TUser>, { rejectWithValue }) => {
     try {
-      const res = await updateUserApi(formData);
+      const res = (await getUserApi()) as { user: TUser };
       return res.user;
     } catch (err) {
       return rejectWithValue('Update failed');

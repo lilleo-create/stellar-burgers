@@ -1,25 +1,62 @@
-// src/pages/feed/feed.tsx
-import { FC, useEffect } from 'react';
-import { useAppDispatch, useAppSelector } from '../../services/hooks';
+import { useEffect, useState } from 'react';
 import { Preloader } from '@ui';
 import { FeedUI } from '@ui-pages';
+import { useAppDispatch, useAppSelector } from '../../services/store';
 import { getFeeds } from '../../services/slices/feedSlice';
+import { fetchIngredients } from '../../services/slices/ingredientsSlice';
 
-export const Feed: FC = () => {
+export const Feed = () => {
   const dispatch = useAppDispatch();
-  const { orders, feedRequest } = useAppSelector((state) => state.feed);
-  useEffect(() => {
-    console.log('Feed rendered');
-  }, []);
 
-  // Загружаем ленту заказов
+  // 🧠 Достаём нужные данные из стора
+  const { orders, feedRequest } = useAppSelector((state) => state.feed);
+  const { items: ingredients, isLoading: ingredientsLoading } = useAppSelector(
+    (state) => state.ingredients
+  );
+
+  const [initialized, setInitialized] = useState(false);
+
+  // 🚀 Загружаем ингредиенты и заказы при первом монтировании
   useEffect(() => {
-    dispatch(getFeeds());
+    console.log('📡 [Feed] Монтирование — запуск загрузки данных');
+    // Грузим ингредиенты, если их нет
+    if (!ingredients.length) {
+      dispatch(fetchIngredients());
+    }
+    // Грузим заказы
+    dispatch(getFeeds())
+      .unwrap()
+      .finally(() => {
+        setInitialized(true);
+      });
   }, [dispatch]);
 
-  if (feedRequest || !orders.length) {
-    return <Preloader />;
-  }
+  // 🔍 Проверяем состояния
+  const isLoading =
+    feedRequest || ingredientsLoading || !initialized || !ingredients.length;
+  const isEmpty = initialized && !isLoading && orders.length === 0;
 
-  return <FeedUI orders={orders} handleGetFeeds={() => dispatch(getFeeds())} />;
+  console.log('🧩 Feed render:', {
+    feedRequest,
+    ingredientsLoading,
+    initialized,
+    ordersCount: orders.length,
+    ingredientsCount: ingredients.length
+  });
+
+  return (
+    <main className='page'>
+      {isLoading ? (
+        <Preloader key='loader' />
+      ) : isEmpty ? (
+        <p className='text text_type_main-medium mt-10 ml-10'>Нет заказов</p>
+      ) : (
+        <FeedUI
+          key={`feed-${orders.length}`}
+          orders={orders}
+          handleGetFeeds={() => dispatch(getFeeds())}
+        />
+      )}
+    </main>
+  );
 };

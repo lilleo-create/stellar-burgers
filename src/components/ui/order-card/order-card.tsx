@@ -13,8 +13,7 @@ import { OrderStatus } from '@components';
 export const OrderCardUI: FC<OrderCardUIProps> = memo(
   ({ orderInfo, maxIngredients, locationState }) => (
     <Link
-      to={orderInfo.number.toString()}
-      relative='path'
+      to={`/feed/${orderInfo.number}`} // ✅ Абсолютный путь
       state={locationState}
       className={`p-6 mb-4 mr-2 ${styles.order}`}
     >
@@ -34,37 +33,37 @@ export const OrderCardUI: FC<OrderCardUIProps> = memo(
       )}
       <div className={`pt-6 ${styles.order_content}`}>
         <ul className={styles.ingredients}>
-          {orderInfo.ingredientsToShow.map((ingredient, index) => {
-            let zIndex = maxIngredients - index;
-            let right = 20 * index;
-            return (
-              <li
-                className={styles.img_wrap}
-                style={{ zIndex: zIndex, right: right }}
-                key={index}
-              >
-                <img
-                  style={{
-                    opacity:
-                      orderInfo.remains && maxIngredients === index + 1
-                        ? '0.5'
-                        : '1'
-                  }}
-                  className={styles.img}
-                  src={ingredient.image_mobile}
-                  alt={ingredient.name}
-                />
-                {maxIngredients === index + 1 ? (
-                  <span
-                    className={`text text_type_digits-default ${styles.remains}`}
-                  >
-                    {orderInfo.remains > 0 ? `+${orderInfo.remains}` : null}
-                  </span>
-                ) : null}
-              </li>
-            );
-          })}
+          {orderInfo.ingredientsToShow.map((ingredient, index) => (
+            <li
+              key={`${orderInfo._id}-${ingredient._id}-${index}`} // ✅ теперь ключ уникален в пределах всей страницы
+              className={styles.img_wrap}
+              style={{
+                zIndex: maxIngredients - index,
+                right: 20 * index
+              }}
+            >
+              <img
+                style={{
+                  opacity:
+                    orderInfo.remains && maxIngredients === index + 1
+                      ? '0.5'
+                      : '1'
+                }}
+                className={styles.img}
+                src={ingredient.image_mobile}
+                alt={ingredient.name}
+              />
+              {maxIngredients === index + 1 && orderInfo.remains > 0 && (
+                <span
+                  className={`text text_type_digits-default ${styles.remains}`}
+                >
+                  +{orderInfo.remains}
+                </span>
+              )}
+            </li>
+          ))}
         </ul>
+
         <div>
           <span
             className={`text text_type_digits-default pr-1 ${styles.order_total}`}

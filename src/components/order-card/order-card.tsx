@@ -1,22 +1,21 @@
 import { FC, memo, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-
+import { useAppSelector } from '../../services/store';
 import { OrderCardProps } from './type';
 import { TIngredient } from '@utils-types';
 import { OrderCardUI } from '../ui/order-card';
 
-import { useAppSelector } from '../../services/store';
-
 const maxIngredients = 6;
 
-export const OrderCard: FC<OrderCardProps> = memo(({ order }) => {
+export const OrderCard: FC<OrderCardProps> = memo(({ order, onClick }) => {
   const location = useLocation();
-
   const ingredients: TIngredient[] = useAppSelector(
     (state) => state.ingredients.items
   );
 
   const orderInfo = useMemo(() => {
+    console.log('🧩 ingredients.length =', ingredients.length);
+
     if (!ingredients.length) return null;
 
     const ingredientsInfo = order.ingredients.reduce(
@@ -29,14 +28,11 @@ export const OrderCard: FC<OrderCardProps> = memo(({ order }) => {
     );
 
     const total = ingredientsInfo.reduce((acc, item) => acc + item.price, 0);
-
     const ingredientsToShow = ingredientsInfo.slice(0, maxIngredients);
-
     const remains =
       ingredientsInfo.length > maxIngredients
         ? ingredientsInfo.length - maxIngredients
         : 0;
-
     const date = new Date(order.createdAt);
 
     return {
@@ -52,10 +48,12 @@ export const OrderCard: FC<OrderCardProps> = memo(({ order }) => {
   if (!orderInfo) return null;
 
   return (
-    <OrderCardUI
-      orderInfo={orderInfo}
-      maxIngredients={maxIngredients}
-      locationState={{ background: location }}
-    />
+    <div onClick={onClick} style={{ cursor: 'pointer' }}>
+      <OrderCardUI
+        orderInfo={orderInfo}
+        maxIngredients={maxIngredients}
+        locationState={{ background: location }}
+      />
+    </div>
   );
 });

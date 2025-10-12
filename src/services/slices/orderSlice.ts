@@ -1,4 +1,3 @@
-// src/services/slices/orderSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { orderBurgerApi } from '../../utils/burger-api';
 import { TOrder } from '../../utils/types';
@@ -31,6 +30,8 @@ const orderSlice = createSlice({
   reducers: {
     closeOrderModal: (state) => {
       state.orderModalData = null;
+      state.orderRequest = false; // ✅ обязательно сбрасываем
+      state.orderFailed = false;
     }
   },
   extraReducers: (builder) => {
@@ -40,7 +41,7 @@ const orderSlice = createSlice({
         state.orderFailed = false;
       })
       .addCase(sendOrder.fulfilled, (state, action: PayloadAction<TOrder>) => {
-        state.orderRequest = false;
+        state.orderRequest = false; // ✅ сбрасываем, чтобы убрать прелоадер
         state.orderData = action.payload;
         state.orderModalData = action.payload;
       })
