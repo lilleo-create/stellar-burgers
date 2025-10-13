@@ -5,10 +5,8 @@ import { TIngredient } from '../../utils/types';
 export const fetchIngredients = createAsyncThunk<TIngredient[]>(
   'ingredients/fetchIngredients',
   async () => {
-    console.log('→ fetchIngredients вызван');
     const data = await fetchIngredientsApi();
-    console.log('→ Ответ API:', data);
-    return data; // ✅ возвращаем массив
+    return data;
   }
 );
 
@@ -38,7 +36,7 @@ const ingredientsSlice = createSlice({
       })
       .addCase(fetchIngredients.fulfilled, (state, action) => {
         state.isLoading = false;
-        state.items = action.payload; // ✅ payload — массив
+        state.items = action.payload;
       })
       .addCase(fetchIngredients.rejected, (state, action) => {
         state.isLoading = false;

@@ -1,47 +1,52 @@
 import { FC, useMemo, useEffect } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useLocation } from 'react-router-dom';
 import { Preloader } from '../ui/preloader';
 import { OrderInfoUI } from '../ui/order-info';
 import { TIngredient, TOrder } from '@utils-types';
 import { useAppSelector, useAppDispatch } from '../../services/store';
 import { getFeeds } from '../../services/slices/feedSlice';
+import { fetchIngredients } from '../../services/slices/ingredientsSlice';
 
 export const OrderInfo: FC = () => {
   const { number } = useParams<{ number?: string }>();
+  const location = useLocation();
   const dispatch = useAppDispatch();
 
-  const orderData = useAppSelector((state) => state.order.orderData);
-  const feedOrders = useAppSelector((state) => state.feed.orders);
   const ingredients = useAppSelector((state) => state.ingredients.items);
+  const feedOrders = useAppSelector((state) => state.feed.orders);
+  const isLoading = useAppSelector((state) => state.feed.feedRequest);
+  const { isAuthChecked } = useAppSelector((state) => state.user);
 
-  // если в feed.orders пусто — подгружаем
   useEffect(() => {
-    if (!feedOrders.length && number) {
+    if (!ingredients.length) {
+      dispatch(fetchIngredients());
+    }
+  }, [dispatch, ingredients.length]);
+
+  useEffect(() => {
+    if (!feedOrders.length && number && isAuthChecked) {
       dispatch(getFeeds());
     }
-  }, [dispatch, feedOrders.length, number]);
+  }, [dispatch, feedOrders.length, number, isAuthChecked]);
 
-  // выбираем источник данных
   const currentOrder: TOrder | null = useMemo(() => {
-    if (orderData) return orderData;
-    if (number && feedOrders.length) {
+    if (feedOrders.length && number) {
       return feedOrders.find((o) => o.number === Number(number)) || null;
     }
     return null;
-  }, [orderData, feedOrders, number]);
+  }, [feedOrders, number]);
 
-  // собираем подробную инфу
   const orderInfo = useMemo(() => {
     if (!currentOrder || !ingredients.length) return null;
 
     const date = new Date(currentOrder.createdAt);
 
     const ingredientsInfo = currentOrder.ingredients.reduce(
-      (acc: Record<string, TIngredient & { count: number }>, item) => {
-        const ingredient = ingredients.find((ing) => ing._id === item);
+      (acc: Record<string, TIngredient & { count: number }>, id) => {
+        const ingredient = ingredients.find((ing) => ing._id === id);
         if (ingredient) {
-          if (acc[item]) acc[item].count++;
-          else acc[item] = { ...ingredient, count: 1 };
+          if (acc[id]) acc[id].count++;
+          else acc[id] = { ...ingredient, count: 1 };
         }
         return acc;
       },
@@ -61,7 +66,9 @@ export const OrderInfo: FC = () => {
     };
   }, [currentOrder, ingredients]);
 
-  if (!orderInfo) return <Preloader />;
+  if (!isAuthChecked || isLoading || !orderInfo) {
+    return <Preloader />;
+  }
 
   return <OrderInfoUI orderInfo={orderInfo} />;
 };

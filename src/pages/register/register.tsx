@@ -18,12 +18,6 @@ export const Register: FC = () => {
   const handleSubmit = (e: SyntheticEvent) => {
     e.preventDefault();
 
-    console.log('📤 Register submit fired:', {
-      name: userName,
-      email,
-      password
-    });
-
     dispatch(registerUser({ name: userName, email, password }))
       .unwrap()
       .then(() => navigate('/login'))

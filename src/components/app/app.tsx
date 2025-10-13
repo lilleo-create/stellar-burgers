@@ -22,14 +22,14 @@ function App() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
-  // 👇 Проверяем токен при загрузке приложения
   useEffect(() => {
     dispatch(checkUserAuth());
   }, [dispatch]);
+
   const background = location.state?.background;
 
   const handleModalClose = () => {
-    navigate(-1);
+    requestAnimationFrame(() => navigate(-1));
   };
 
   return (
@@ -38,13 +38,30 @@ function App() {
 
       {/* Основные страницы */}
       <Routes location={background || location}>
-        {/* Общедоступные страницы */}
         <Route path='/' element={<ConstructorPage />} />
         <Route path='/feed' element={<Feed />} />
-        <Route path='/feed/:number' element={<OrderInfo />} />
+
+        {/* Обычная страница деталей ингредиента (если перешли напрямую по URL) */}
         <Route path='/ingredients/:id' element={<IngredientDetails />} />
 
-        {/* Только для НЕавторизованных */}
+        {/* Обычная страница заказа из фида */}
+        <Route path='/feed/:number' element={<OrderInfo />} />
+
+        {/* Профиль и история */}
+        <Route
+          path='/profile'
+          element={<ProtectedRoute element={<Profile />} />}
+        />
+        <Route
+          path='/profile/orders'
+          element={<ProtectedRoute element={<ProfileOrders />} />}
+        />
+        <Route
+          path='/profile/orders/:number'
+          element={<ProtectedRoute element={<OrderInfo />} />}
+        />
+
+        {/* Страницы авторизации */}
         <Route
           path='/login'
           element={<ProtectedRoute onlyUnAuth element={<Login />} />}
@@ -62,25 +79,10 @@ function App() {
           element={<ProtectedRoute onlyUnAuth element={<ResetPassword />} />}
         />
 
-        {/* Только для авторизованных */}
-        <Route
-          path='/profile'
-          element={<ProtectedRoute element={<Profile />} />}
-        />
-        <Route
-          path='/profile/orders'
-          element={<ProtectedRoute element={<ProfileOrders />} />}
-        />
-        <Route
-          path='/profile/orders/:number'
-          element={<ProtectedRoute element={<OrderInfo />} />}
-        />
-
-        {/* 404 */}
         <Route path='*' element={<NotFound404 />} />
       </Routes>
 
-      {/* Модальные окна (работают только при наличии background) */}
+      {/* Модальные маршруты */}
       {background && (
         <Routes>
           <Route

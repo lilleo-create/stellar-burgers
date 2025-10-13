@@ -14,8 +14,6 @@ export const OrderCard: FC<OrderCardProps> = memo(({ order, onClick }) => {
   );
 
   const orderInfo = useMemo(() => {
-    console.log('🧩 ingredients.length =', ingredients.length);
-
     if (!ingredients.length) return null;
 
     const ingredientsInfo = order.ingredients.reduce(

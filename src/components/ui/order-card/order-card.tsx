@@ -13,7 +13,7 @@ import { OrderStatus } from '@components';
 export const OrderCardUI: FC<OrderCardUIProps> = memo(
   ({ orderInfo, maxIngredients, locationState }) => (
     <Link
-      to={`/feed/${orderInfo.number}`} // ✅ Абсолютный путь
+      to={`/feed/${orderInfo.number}`}
       state={locationState}
       className={`p-6 mb-4 mr-2 ${styles.order}`}
     >
@@ -35,7 +35,7 @@ export const OrderCardUI: FC<OrderCardUIProps> = memo(
         <ul className={styles.ingredients}>
           {orderInfo.ingredientsToShow.map((ingredient, index) => (
             <li
-              key={`${orderInfo._id}-${ingredient._id}-${index}`} // ✅ теперь ключ уникален в пределах всей страницы
+              key={`${orderInfo._id}-${ingredient._id}-${index}`}
               className={styles.img_wrap}
               style={{
                 zIndex: maxIngredients - index,

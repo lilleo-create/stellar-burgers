@@ -1,6 +1,9 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { orderBurgerApi } from '../../utils/burger-api';
+import { orderBurgerApi, fetchWithRefresh } from '../../utils/burger-api';
+import { getCookie } from '../../utils/cookie';
 import { TOrder } from '../../utils/types';
+
+const API_URL = 'https://norma.nomoreparties.space/api';
 
 export const sendOrder = createAsyncThunk(
   'order/sendOrder',
@@ -10,18 +13,41 @@ export const sendOrder = createAsyncThunk(
   }
 );
 
+export const getUserOrders = createAsyncThunk(
+  'order/getUserOrders',
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await fetchWithRefresh<{ orders: TOrder[] }>(
+        `${API_URL}/orders`,
+        {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json;charset=utf-8',
+            Authorization: 'Bearer ' + getCookie('accessToken')
+          }
+        }
+      );
+      return res.orders;
+    } catch (err: any) {
+      return rejectWithValue(err.message || 'Ошибка загрузки истории заказов');
+    }
+  }
+);
+
 interface OrderState {
   orderData: TOrder | null;
   orderRequest: boolean;
   orderFailed: boolean;
   orderModalData: TOrder | null;
+  userOrders: TOrder[];
 }
 
 const initialState: OrderState = {
   orderData: null,
   orderRequest: false,
   orderFailed: false,
-  orderModalData: null
+  orderModalData: null,
+  userOrders: []
 };
 
 const orderSlice = createSlice({
@@ -30,7 +56,7 @@ const orderSlice = createSlice({
   reducers: {
     closeOrderModal: (state) => {
       state.orderModalData = null;
-      state.orderRequest = false; // ✅ обязательно сбрасываем
+      state.orderRequest = false;
       state.orderFailed = false;
     }
   },
@@ -41,7 +67,7 @@ const orderSlice = createSlice({
         state.orderFailed = false;
       })
       .addCase(sendOrder.fulfilled, (state, action: PayloadAction<TOrder>) => {
-        state.orderRequest = false; // ✅ сбрасываем, чтобы убрать прелоадер
+        state.orderRequest = false;
         state.orderData = action.payload;
         state.orderModalData = action.payload;
       })
@@ -49,6 +75,22 @@ const orderSlice = createSlice({
         state.orderRequest = false;
         state.orderFailed = true;
         state.orderData = null;
+      })
+
+      .addCase(getUserOrders.pending, (state) => {
+        state.orderRequest = true;
+        state.orderFailed = false;
+      })
+      .addCase(
+        getUserOrders.fulfilled,
+        (state, action: PayloadAction<TOrder[]>) => {
+          state.orderRequest = false;
+          state.userOrders = action.payload;
+        }
+      )
+      .addCase(getUserOrders.rejected, (state) => {
+        state.orderRequest = false;
+        state.orderFailed = true;
       });
   }
 });

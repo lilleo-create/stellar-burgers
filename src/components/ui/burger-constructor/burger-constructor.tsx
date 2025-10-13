@@ -23,7 +23,6 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
   type IngredientWithUuid = TConstructorIngredient & { uuid: string };
   return (
     <section className={styles.burger_constructor}>
-      {/* Верхняя булка */}
       {bun ? (
         <div className={`${styles.element} mb-4 mr-4`}>
           <ConstructorElement
@@ -42,7 +41,6 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
         </div>
       )}
 
-      {/* Начинка (между булками) */}
       <ul className={styles.elements}>
         {ingredients?.length > 0 ? (
           (ingredients as IngredientWithUuid[]).map((item, index) => (
@@ -62,7 +60,6 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
         )}
       </ul>
 
-      {/* Нижняя булка */}
       {bun ? (
         <div className={`${styles.element} mt-4 mr-4`}>
           <ConstructorElement
@@ -81,7 +78,6 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
         </div>
       )}
 
-      {/* Итог и кнопка */}
       <div className={`${styles.total} mt-10 mr-4`}>
         <div className={`${styles.cost} mr-10`}>
           <p className={`text ${styles.text} mr-2`}>{price}</p>
@@ -98,7 +94,6 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
         </Button>
       </div>
 
-      {/* Модалки */}
       {orderRequest && (
         <Modal onClose={closeOrderModal} title='Оформляем заказ...'>
           <Preloader />

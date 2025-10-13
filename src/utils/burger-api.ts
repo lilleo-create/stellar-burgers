@@ -6,7 +6,6 @@ const URL =
   'https://norma.nomoreparties.space/api';
 
 const checkResponse = async <T>(res: unknown): Promise<T> => {
-  // Принудительно говорим TS, что это именно Response
   const response = res as Response;
 
   let data: any;
@@ -55,7 +54,6 @@ export const fetchWithRefresh = async <T>(
       localStorage.setItem('refreshToken', refreshData.refreshToken);
       setCookie('accessToken', refreshData.accessToken.split('Bearer ')[1]);
 
-      // ✅ Исправлено: добавляем Bearer
       const res = await fetch(url, {
         ...options,
         headers: {

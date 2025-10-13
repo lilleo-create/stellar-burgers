@@ -18,7 +18,6 @@ export const ConstructorPage: FC = () => {
       dispatch(fetchIngredients());
     }
   }, [dispatch, items.length]);
-  console.log('ingredients', items);
 
   return (
     <main className={styles.containerMain}>

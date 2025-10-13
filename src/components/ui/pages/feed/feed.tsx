@@ -6,14 +6,10 @@ import { RefreshButton } from '@zlden/react-developer-burger-ui-components';
 
 export const FeedUI: FC<FeedUIProps> = memo(
   ({ orders = [], handleGetFeeds }) => {
-    console.log('🧩 orders in FeedUI:', orders);
-    console.log('📊 Кол-во заказов:', orders?.length);
     if (Array.isArray(orders)) {
       const ids = orders.map((o) => o._id);
       const unique = new Set(ids);
       const duplicates = ids.filter((id, i) => ids.indexOf(id) !== i);
-      console.log('🔁 Дубликаты:', duplicates);
-      console.log('✅ Уникальных id:', unique.size);
     }
 
     return (

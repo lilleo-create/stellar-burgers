@@ -13,7 +13,6 @@ export const BurgerIngredient: FC<TBurgerIngredientProps> = memo(
 
     const handleAdd = () => {
       if (ingredient.type === 'bun') {
-        // 🧩 кастим TIngredient → TConstructorIngredient, чтобы TS не ругался
         dispatch(setBun(ingredient as TConstructorIngredient));
       } else {
         dispatch(addIngredient(ingredient as TConstructorIngredient));

@@ -12,7 +12,7 @@ export const AppHeader: FC = () => {
 
   return (
     <AppHeaderUI
-      userName='' // или user?.name из Redux, если хочешь
+      userName=''
       onConstructorClick={handleConstructorClick}
       onFeedClick={handleFeedClick}
       onProfileClick={handleProfileClick}

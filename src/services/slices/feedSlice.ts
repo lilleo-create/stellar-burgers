@@ -1,4 +1,3 @@
-// src/services/slices/feedSlice.ts
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 import { getFeedsApi } from '../../utils/burger-api';
 import { TOrder } from '../../utils/types';
@@ -20,11 +19,18 @@ const initialState: FeedState = {
   error: null
 };
 
-// ✅ асинхронное получение заказов
-export const getFeeds = createAsyncThunk('feed/getFeeds', async () => {
-  const res = await getFeedsApi();
-  return res;
-});
+export const getFeeds = createAsyncThunk(
+  'feed/getFeeds',
+  async (_, { rejectWithValue }) => {
+    try {
+      const res = await getFeedsApi();
+      return res;
+    } catch (err: any) {
+      console.error('❌ Ошибка загрузки ленты:', err);
+      return rejectWithValue(err.message || 'Ошибка загрузки ленты заказов');
+    }
+  }
+);
 
 const feedSlice = createSlice({
   name: 'feed',
@@ -37,16 +43,17 @@ const feedSlice = createSlice({
       })
       .addCase(getFeeds.fulfilled, (state, action) => {
         state.feedRequest = false;
-        state.orders = action.payload.orders || []; // ✅ fallback на []
+        state.orders = action.payload.orders || [];
         state.totalData = {
           total: action.payload.total,
           totalToday: action.payload.totalToday
         };
       })
 
-      .addCase(getFeeds.rejected, (state) => {
+      .addCase(getFeeds.rejected, (state, action) => {
         state.feedRequest = false;
-        state.error = 'Ошибка загрузки ленты заказов';
+        state.error =
+          (action.payload as string) || 'Ошибка загрузки ленты заказов';
       });
   }
 });

@@ -9,7 +9,6 @@ import {
 } from '../../utils/burger-api';
 import { TUser } from '../../utils/types';
 
-// Тип состояния
 type UserState = {
   user: TUser | null;
   isAuthChecked: boolean;
@@ -22,8 +21,6 @@ const initialState: UserState = {
   error: null
 };
 
-//
-// === Проверка авторизации при загрузке приложения ===
 export const checkUserAuth = createAsyncThunk(
   'user/checkAuth',
   async (_, { rejectWithValue }) => {
@@ -33,7 +30,6 @@ export const checkUserAuth = createAsyncThunk(
     } catch (err: any) {
       console.warn('❌ Auth check failed:', err);
 
-      // Удаляем токены только если refreshToken уже невалиден
       if (
         err?.message?.includes('jwt expired') ||
         err?.message?.includes('invalid token') ||
@@ -48,9 +44,6 @@ export const checkUserAuth = createAsyncThunk(
   }
 );
 
-//
-// === Логин ===
-//
 export const loginUser = createAsyncThunk(
   'user/login',
   async (
@@ -66,9 +59,6 @@ export const loginUser = createAsyncThunk(
   }
 );
 
-//
-// === Регистрация ===
-//
 export const registerUser = createAsyncThunk(
   'user/register',
   async (
@@ -94,9 +84,7 @@ export const getUser = createAsyncThunk(
     }
   }
 );
-//
-// === Обновление данных профиля ===
-//
+
 export const updateUser = createAsyncThunk(
   'user/update',
   async (formData: Partial<TUser>, { rejectWithValue }) => {
@@ -109,9 +97,6 @@ export const updateUser = createAsyncThunk(
   }
 );
 
-//
-// === Логаут ===
-//
 export const logout = createAsyncThunk('user/logout', async () => {
   await logoutApi();
   localStorage.removeItem('refreshToken');
@@ -119,9 +104,6 @@ export const logout = createAsyncThunk('user/logout', async () => {
     'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
 });
 
-//
-// === Slice ===
-//
 const userSlice = createSlice({
   name: 'user',
   initialState,
@@ -132,7 +114,6 @@ const userSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
-      // getUser
       .addCase(getUser.fulfilled, (state, action) => {
         state.user = action.payload;
       })
@@ -140,7 +121,6 @@ const userSlice = createSlice({
         state.user = null;
       })
 
-      // checkAuth
       .addCase(checkUserAuth.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthChecked = true;
@@ -150,7 +130,6 @@ const userSlice = createSlice({
         state.isAuthChecked = true;
       })
 
-      // login
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.error = null;
@@ -159,7 +138,6 @@ const userSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // register
       .addCase(registerUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.error = null;
@@ -168,7 +146,6 @@ const userSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // update
       .addCase(updateUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.error = null;
@@ -177,7 +154,6 @@ const userSlice = createSlice({
         state.error = action.payload as string;
       })
 
-      // logout
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
       });
