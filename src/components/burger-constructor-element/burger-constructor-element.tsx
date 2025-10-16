@@ -6,7 +6,6 @@ import {
   removeIngredient,
   moveIngredient
 } from '../../services/slices/constructorSlice';
-import { TConstructorIngredient } from '@utils-types';
 
 export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
   ({ ingredient, index, totalItems }) => {
@@ -25,12 +24,12 @@ export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
     };
 
     const handleClose = () => {
-      dispatch(removeIngredient((ingredient as any).uuid));
+      dispatch(removeIngredient(ingredient.uuid));
     };
 
     return (
       <BurgerConstructorElementUI
-        ingredient={ingredient as TConstructorIngredient}
+        ingredient={ingredient}
         index={index}
         totalItems={totalItems}
         handleMoveUp={handleMoveUp}

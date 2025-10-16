@@ -5,7 +5,8 @@ import {
   loginUserApi,
   registerUserApi,
   updateUserApi,
-  logoutApi
+  logoutApi,
+  refreshToken as refreshTokenApi
 } from '../../utils/burger-api';
 import { TUser } from '../../utils/types';
 
@@ -21,87 +22,112 @@ const initialState: UserState = {
   error: null
 };
 
-export const checkUserAuth = createAsyncThunk(
-  'user/checkAuth',
-  async (_, { rejectWithValue }) => {
+/** Храним в cookie «чистый» access (без "Bearer ") */
+const setAccessCookie = (accessToken: string) => {
+  const pure = accessToken.startsWith('Bearer ')
+    ? accessToken.split('Bearer ')[1]
+    : accessToken;
+  document.cookie = `accessToken=${pure}; path=/;`;
+  return pure;
+};
+
+const clearTokens = () => {
+  localStorage.removeItem('refreshToken');
+  document.cookie = 'accessToken=; Max-Age=0; path=/;';
+};
+
+/** ✅ Автологин: пробуем /auth/user; если access протух — рефрешим и повторяем */
+export const checkUserAuth = createAsyncThunk<
+  TUser,
+  void,
+  { rejectValue: string }
+>('user/checkAuth', async (_, { rejectWithValue }) => {
+  try {
+    const res1 = (await getUserApi()) as { user: TUser };
+    return res1.user;
+  } catch (err: any) {
+    const refresh = localStorage.getItem('refreshToken');
+    if (!refresh) {
+      return rejectWithValue('no tokens');
+    }
     try {
-      const res = (await getUserApi()) as { user: TUser };
-      return res.user;
-    } catch (err: any) {
-      console.warn('❌ Auth check failed:', err);
+      const data = await refreshTokenApi();
+      setAccessCookie(data.accessToken);
+      localStorage.setItem('refreshToken', data.refreshToken);
 
-      if (
-        err?.message?.includes('jwt expired') ||
-        err?.message?.includes('invalid token') ||
-        err?.message?.includes('token missing')
-      ) {
-        localStorage.removeItem('refreshToken');
-        document.cookie = 'accessToken=; Max-Age=0; path=/;';
-      }
-
-      return rejectWithValue('Auth failed');
+      const res2 = (await getUserApi()) as { user: TUser };
+      return res2.user;
+    } catch (e: any) {
+      clearTokens();
+      return rejectWithValue(e?.message || 'refresh failed');
     }
   }
-);
+});
 
-export const loginUser = createAsyncThunk(
-  'user/login',
-  async (
-    formData: { email: string; password: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const res = await loginUserApi(formData);
-      return res.user;
-    } catch (err) {
-      return rejectWithValue('Login failed');
-    }
+export const loginUser = createAsyncThunk<
+  TUser,
+  { email: string; password: string },
+  { rejectValue: string }
+>('user/login', async (formData, { rejectWithValue }) => {
+  try {
+    const res: any = await loginUserApi(formData);
+    if (res?.accessToken) setAccessCookie(res.accessToken);
+    if (res?.refreshToken)
+      localStorage.setItem('refreshToken', res.refreshToken);
+    return res.user as TUser;
+  } catch {
+    return rejectWithValue('Login failed');
   }
-);
+});
 
-export const registerUser = createAsyncThunk(
-  'user/register',
-  async (
-    formData: { name: string; email: string; password: string },
-    { rejectWithValue }
-  ) => {
-    try {
-      const res = await registerUserApi(formData);
-      return res.user;
-    } catch (err) {
-      return rejectWithValue('Registration failed');
-    }
+export const registerUser = createAsyncThunk<
+  TUser,
+  { name: string; email: string; password: string },
+  { rejectValue: string }
+>('user/register', async (formData, { rejectWithValue }) => {
+  try {
+    const res: any = await registerUserApi(formData);
+    if (res?.accessToken) setAccessCookie(res.accessToken);
+    if (res?.refreshToken)
+      localStorage.setItem('refreshToken', res.refreshToken);
+    return res.user as TUser;
+  } catch {
+    return rejectWithValue('Registration failed');
   }
-);
-export const getUser = createAsyncThunk(
+});
+
+export const getUser = createAsyncThunk<TUser, void, { rejectValue: string }>(
   'user/getUser',
   async (_, { rejectWithValue }) => {
     try {
       const res = (await getUserApi()) as { user: TUser };
       return res.user;
-    } catch (err) {
+    } catch {
       return rejectWithValue('Get user failed');
     }
   }
 );
 
-export const updateUser = createAsyncThunk(
-  'user/update',
-  async (formData: Partial<TUser>, { rejectWithValue }) => {
-    try {
-      const res = (await getUserApi()) as { user: TUser };
-      return res.user;
-    } catch (err) {
-      return rejectWithValue('Update failed');
-    }
+/** 🛠️ тут была ошибка: вызывался getUserApi вместо updateUserApi */
+export const updateUser = createAsyncThunk<
+  TUser,
+  Partial<TUser>,
+  { rejectValue: string }
+>('user/update', async (formData, { rejectWithValue }) => {
+  try {
+    const res = (await updateUserApi(formData)) as { user: TUser };
+    return res.user;
+  } catch {
+    return rejectWithValue('Update failed');
   }
-);
+});
 
 export const logout = createAsyncThunk('user/logout', async () => {
-  await logoutApi();
-  localStorage.removeItem('refreshToken');
-  document.cookie =
-    'accessToken=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/';
+  try {
+    await logoutApi();
+  } finally {
+    clearTokens();
+  }
 });
 
 const userSlice = createSlice({
@@ -121,31 +147,36 @@ const userSlice = createSlice({
         state.user = null;
       })
 
+      .addCase(checkUserAuth.pending, (state) => {
+        state.isAuthChecked = false;
+      })
       .addCase(checkUserAuth.fulfilled, (state, action) => {
         state.user = action.payload;
         state.isAuthChecked = true;
+        state.error = null;
       })
-      .addCase(checkUserAuth.rejected, (state) => {
+      .addCase(checkUserAuth.rejected, (state, action) => {
         state.user = null;
         state.isAuthChecked = true;
+        state.error = (action.payload as string) || 'Auth failed';
       })
 
       .addCase(loginUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.error = null;
+        state.isAuthChecked = true;
       })
       .addCase(loginUser.rejected, (state, action) => {
         state.error = action.payload as string;
       })
-
       .addCase(registerUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.error = null;
+        state.isAuthChecked = true;
       })
       .addCase(registerUser.rejected, (state, action) => {
         state.error = action.payload as string;
       })
-
       .addCase(updateUser.fulfilled, (state, action) => {
         state.user = action.payload;
         state.error = null;
@@ -153,9 +184,9 @@ const userSlice = createSlice({
       .addCase(updateUser.rejected, (state, action) => {
         state.error = action.payload as string;
       })
-
       .addCase(logout.fulfilled, (state) => {
         state.user = null;
+        state.isAuthChecked = true;
       });
   }
 });

@@ -20,7 +20,9 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
 }) => {
   const bun = constructorItems.bun;
   const ingredients = constructorItems.ingredients;
+
   type IngredientWithUuid = TConstructorIngredient & { uuid: string };
+
   return (
     <section className={styles.burger_constructor}>
       {bun ? (

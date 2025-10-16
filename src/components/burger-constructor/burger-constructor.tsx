@@ -2,6 +2,10 @@ import { FC, useMemo } from 'react';
 import { useAppSelector, useAppDispatch } from '../../services/store';
 import { BurgerConstructorUI } from '../ui/burger-constructor';
 import { sendOrder, closeOrderModal } from '../../services/slices/orderSlice';
+import {
+  removeIngredient,
+  moveIngredient
+} from '../../services/slices/constructorSlice';
 import { TConstructorIngredient } from '../../utils/types';
 import { useNavigate } from 'react-router-dom';
 
@@ -48,6 +52,14 @@ export const BurgerConstructor: FC = () => {
     dispatch(closeOrderModal());
   };
 
+  const handleRemoveIngredient = (uuid: string) => {
+    dispatch(removeIngredient(uuid));
+  };
+
+  const handleMoveIngredient = (fromIndex: number, toIndex: number) => {
+    dispatch(moveIngredient({ fromIndex, toIndex }));
+  };
+
   return (
     <BurgerConstructorUI
       price={price}
@@ -56,6 +68,8 @@ export const BurgerConstructor: FC = () => {
       orderModalData={orderModalData}
       onOrderClick={onOrderClick}
       closeOrderModal={handleCloseModal}
+      onRemoveIngredient={handleRemoveIngredient}
+      onMoveIngredient={handleMoveIngredient}
     />
   );
 };

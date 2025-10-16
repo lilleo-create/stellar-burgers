@@ -48,21 +48,34 @@ export const fetchWithRefresh = async <T>(
     const res = await fetch(url, options);
     return await checkResponse<T>(res);
   } catch (err: any) {
-    if (err.message === 'jwt expired' || err.message === 'jwt malformed') {
-      const refreshData: TRefreshResponse = await refreshToken();
+    const msg = String(err?.message || '').toLowerCase();
 
+    // Триггеры для рефреша:
+    const shouldRefresh =
+      msg.includes('jwt expired') ||
+      msg.includes('jwt malformed') ||
+      msg.includes('you should be authorised') || // частое сообщение у /auth/user
+      msg.includes('not authorized') ||
+      msg.includes('forbidden'); // на всякий случай
+
+    if (shouldRefresh) {
+      const refreshData = await refreshToken();
+      // сохранить новые токены
       localStorage.setItem('refreshToken', refreshData.refreshToken);
-      setCookie('accessToken', refreshData.accessToken.split('Bearer ')[1]);
+      const access = refreshData.accessToken.startsWith('Bearer ')
+        ? refreshData.accessToken.split('Bearer ')[1]
+        : refreshData.accessToken;
+      setCookie('accessToken', access);
 
-      const res = await fetch(url, {
+      // повтор запроса с новым токеном
+      const res2 = await fetch(url, {
         ...options,
         headers: {
-          ...options.headers,
-          Authorization: 'Bearer ' + refreshData.accessToken.split('Bearer ')[1]
+          ...(options.headers || {}),
+          Authorization: `Bearer ${access}`
         }
       });
-
-      return await checkResponse<T>(res);
+      return await checkResponse<T>(res2);
     }
 
     return Promise.reject(err);
@@ -107,14 +120,17 @@ export const loginUserApi = (data: { email: string; password: string }) =>
       return Promise.reject(data);
     });
 
-export const getUserApi = (): Promise<TUserResponse> =>
-  fetch(`${URL}/auth/user`, {
+export const getUserApi = (): Promise<TUserResponse> => {
+  const access = getCookie('accessToken'); // чистый токен (без "Bearer")
+  const headers: HeadersInit = { 'Content-Type': 'application/json' };
+  if (access) headers.Authorization = `Bearer ${access}`; // НЕ добавляем, если токена нет
+
+  // важно: через fetchWithRefresh, чтобы сработал рефреш при невалидном токене
+  return fetchWithRefresh<TUserResponse>(`${URL}/auth/user`, {
     method: 'GET',
-    headers: {
-      'Content-Type': 'application/json',
-      Authorization: `Bearer ${getCookie('accessToken')}`
-    }
-  }).then((res) => checkResponse<TUserResponse>(res));
+    headers
+  });
+};
 
 export const updateUserApi = (data: Partial<TUser>) =>
   fetchWithRefresh(`${URL}/auth/user`, {

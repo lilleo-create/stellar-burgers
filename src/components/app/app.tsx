@@ -26,10 +26,22 @@ function App() {
     dispatch(checkUserAuth());
   }, [dispatch]);
 
-  const background = location.state?.background;
+  const background = (location.state as { background?: Location } | undefined)
+    ?.background;
 
   const handleModalClose = () => {
-    requestAnimationFrame(() => navigate(-1));
+    if (background) {
+      requestAnimationFrame(() => navigate(-1));
+      return;
+    }
+    const p = location.pathname;
+    if (p.startsWith('/profile/orders/')) {
+      navigate('/profile/orders', { replace: true });
+    } else if (p.startsWith('/feed/')) {
+      navigate('/feed', { replace: true });
+    } else {
+      navigate('/', { replace: true });
+    }
   };
 
   return (
@@ -41,10 +53,10 @@ function App() {
         <Route path='/' element={<ConstructorPage />} />
         <Route path='/feed' element={<Feed />} />
 
-        {/* Обычная страница деталей ингредиента (если перешли напрямую по URL) */}
+        {/* Полностраничные детали ингредиента (прямой URL) */}
         <Route path='/ingredients/:id' element={<IngredientDetails />} />
 
-        {/* Обычная страница заказа из фида */}
+        {/* Полностраничные детали заказа из ленты (прямой URL) */}
         <Route path='/feed/:number' element={<OrderInfo />} />
 
         {/* Профиль и история */}
@@ -61,7 +73,7 @@ function App() {
           element={<ProtectedRoute element={<OrderInfo />} />}
         />
 
-        {/* Страницы авторизации */}
+        {/* Авторизация */}
         <Route
           path='/login'
           element={<ProtectedRoute onlyUnAuth element={<Login />} />}
@@ -82,7 +94,7 @@ function App() {
         <Route path='*' element={<NotFound404 />} />
       </Routes>
 
-      {/* Модальные маршруты */}
+      {/* Модальные маршруты рисуем только при наличии background */}
       {background && (
         <Routes>
           <Route
