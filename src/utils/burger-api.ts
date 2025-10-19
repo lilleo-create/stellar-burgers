@@ -49,36 +49,29 @@ export const fetchWithRefresh = async <T>(
     return await checkResponse<T>(res);
   } catch (err: any) {
     const msg = String(err?.message || '').toLowerCase();
-
-    // Триггеры для рефреша:
     const shouldRefresh =
       msg.includes('jwt expired') ||
       msg.includes('jwt malformed') ||
-      msg.includes('you should be authorised') || // частое сообщение у /auth/user
-      msg.includes('not authorized') ||
-      msg.includes('forbidden'); // на всякий случай
-
-    if (shouldRefresh) {
-      const refreshData = await refreshToken();
-      // сохранить новые токены
-      localStorage.setItem('refreshToken', refreshData.refreshToken);
-      const access = refreshData.accessToken.startsWith('Bearer ')
-        ? refreshData.accessToken.split('Bearer ')[1]
-        : refreshData.accessToken;
-      setCookie('accessToken', access);
-
-      // повтор запроса с новым токеном
-      const res2 = await fetch(url, {
-        ...options,
-        headers: {
-          ...(options.headers || {}),
-          Authorization: `Bearer ${access}`
-        }
-      });
-      return await checkResponse<T>(res2);
+      msg.includes('you should be authorised');
+    const hasRefresh = !!localStorage.getItem('refreshToken');
+    if (!shouldRefresh || !hasRefresh) {
+      throw err;
     }
+    const refreshData = await refreshToken();
+    localStorage.setItem('refreshToken', refreshData.refreshToken);
 
-    return Promise.reject(err);
+    const access = refreshData.accessToken.startsWith('Bearer ')
+      ? refreshData.accessToken.split('Bearer ')[1]
+      : refreshData.accessToken;
+    setCookie('accessToken', access);
+    const res2 = await fetch(url, {
+      ...options,
+      headers: {
+        ...(options.headers || {}),
+        Authorization: `Bearer ${access}`
+      }
+    });
+    return await checkResponse<T>(res2);
   }
 };
 
@@ -92,40 +85,20 @@ export const registerUserApi = (data: {
     method: 'POST',
     headers: { 'Content-Type': 'application/json;charset=utf-8' },
     body: JSON.stringify(data)
-  })
-    .then((res) => checkResponse<any>(res))
-    .then((data) => {
-      if (data.success) {
-        setCookie('accessToken', data.accessToken.split('Bearer ')[1]);
-        localStorage.setItem('refreshToken', data.refreshToken);
-        return data;
-      }
-      return Promise.reject(data);
-    });
+  }).then((res) => checkResponse<any>(res));
 
 export const loginUserApi = (data: { email: string; password: string }) =>
   fetch(`${URL}/auth/login`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json;charset=utf-8' },
     body: JSON.stringify(data)
-  })
-    .then((res) => checkResponse<any>(res))
-    .then((data) => {
-      fetchWithRefresh;
-      if (data.success) {
-        setCookie('accessToken', data.accessToken.split('Bearer ')[1]);
-        localStorage.setItem('refreshToken', data.refreshToken);
-        return data;
-      }
-      return Promise.reject(data);
-    });
+  }).then((res) => checkResponse<any>(res));
 
 export const getUserApi = (): Promise<TUserResponse> => {
-  const access = getCookie('accessToken'); // чистый токен (без "Bearer")
+  const access = getCookie('accessToken');
   const headers: HeadersInit = { 'Content-Type': 'application/json' };
-  if (access) headers.Authorization = `Bearer ${access}`; // НЕ добавляем, если токена нет
+  if (access) headers.Authorization = `Bearer ${access}`;
 
-  // важно: через fetchWithRefresh, чтобы сработал рефреш при невалидном токене
   return fetchWithRefresh<TUserResponse>(`${URL}/auth/user`, {
     method: 'GET',
     headers

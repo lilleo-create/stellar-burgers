@@ -18,12 +18,6 @@ export const OrderInfo: FC = () => {
   const { isAuthChecked } = useAppSelector((state) => state.user);
 
   useEffect(() => {
-    if (!ingredients.length) {
-      dispatch(fetchIngredients());
-    }
-  }, [dispatch, ingredients.length]);
-
-  useEffect(() => {
     if (!feedOrders.length && number && isAuthChecked) {
       dispatch(getFeeds());
     }

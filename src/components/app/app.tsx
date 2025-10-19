@@ -1,5 +1,12 @@
 import { useEffect } from 'react';
-import { Routes, Route, useLocation, useNavigate } from 'react-router-dom';
+import {
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+  Location
+} from 'react-router-dom';
+
 import { ConstructorPage } from '../../pages/constructor-page';
 import { Feed } from '../../pages/feed';
 import { Login } from '../../pages/login';
@@ -14,20 +21,35 @@ import { IngredientDetails } from '../ingredient-details/ingredient-details';
 import { OrderInfo } from '../order-info/order-info';
 import { Modal } from '../modal/modal';
 import { ProtectedRoute } from '../protected-route/protected-route';
-import { useAppDispatch } from '../../services/store';
+
+import { useAppDispatch, useAppSelector } from '../../services/store';
 import { checkUserAuth } from '../../services/slices/userSlice';
+import { fetchIngredients } from '../../services/slices/ingredientsSlice';
+
+const isModalPath = (p: string) =>
+  p.startsWith('/ingredients/') ||
+  p.startsWith('/feed/') ||
+  p.startsWith('/profile/orders/');
 
 function App() {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
 
+  const items = useAppSelector((s) => s.ingredients.items);
+
   useEffect(() => {
+    if (!items.length) {
+      dispatch(fetchIngredients());
+    }
     dispatch(checkUserAuth());
   }, [dispatch]);
 
-  const background = (location.state as { background?: Location } | undefined)
-    ?.background;
+  const state = location.state as { background?: Location } | undefined;
+  const background =
+    state?.background && isModalPath(location.pathname)
+      ? state.background
+      : undefined;
 
   const handleModalClose = () => {
     if (background) {
@@ -47,19 +69,11 @@ function App() {
   return (
     <>
       <AppHeader />
-
-      {/* Основные страницы */}
       <Routes location={background || location}>
         <Route path='/' element={<ConstructorPage />} />
         <Route path='/feed' element={<Feed />} />
-
-        {/* Полностраничные детали ингредиента (прямой URL) */}
         <Route path='/ingredients/:id' element={<IngredientDetails />} />
-
-        {/* Полностраничные детали заказа из ленты (прямой URL) */}
         <Route path='/feed/:number' element={<OrderInfo />} />
-
-        {/* Профиль и история */}
         <Route
           path='/profile'
           element={<ProtectedRoute element={<Profile />} />}
@@ -72,8 +86,6 @@ function App() {
           path='/profile/orders/:number'
           element={<ProtectedRoute element={<OrderInfo />} />}
         />
-
-        {/* Авторизация */}
         <Route
           path='/login'
           element={<ProtectedRoute onlyUnAuth element={<Login />} />}
@@ -94,8 +106,7 @@ function App() {
         <Route path='*' element={<NotFound404 />} />
       </Routes>
 
-      {/* Модальные маршруты рисуем только при наличии background */}
-      {background && (
+      {background && isModalPath(location.pathname) && (
         <Routes>
           <Route
             path='/ingredients/:id'

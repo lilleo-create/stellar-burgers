@@ -3,7 +3,6 @@ import { Preloader } from '@ui';
 import { FeedUI } from '@ui-pages';
 import { useAppDispatch, useAppSelector } from '../../services/store';
 import { getFeeds } from '../../services/slices/feedSlice';
-import { fetchIngredients } from '../../services/slices/ingredientsSlice';
 
 export const Feed = () => {
   const dispatch = useAppDispatch();
@@ -16,18 +15,17 @@ export const Feed = () => {
   const [initialized, setInitialized] = useState(false);
 
   useEffect(() => {
-    if (!ingredients.length) {
-      dispatch(fetchIngredients());
-    }
     dispatch(getFeeds())
       .unwrap()
-      .finally(() => {
-        setInitialized(true);
-      });
+      .finally(() => setInitialized(true));
   }, [dispatch]);
 
   const isLoading =
-    feedRequest || ingredientsLoading || !initialized || !ingredients.length;
+    feedRequest ||
+    ingredientsLoading ||
+    !initialized ||
+    ingredients.length === 0;
+
   const isEmpty = initialized && !isLoading && orders.length === 0;
 
   return (

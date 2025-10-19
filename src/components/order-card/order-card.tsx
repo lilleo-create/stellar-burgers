@@ -7,7 +7,7 @@ import { OrderCardUI } from '../ui/order-card';
 
 const maxIngredients = 6;
 
-export const OrderCard: FC<OrderCardProps> = memo(({ order, onClick }) => {
+export const OrderCard: FC<OrderCardProps> = memo(({ order /*, onClick*/ }) => {
   const location = useLocation();
   const ingredients: TIngredient[] = useAppSelector(
     (state) => state.ingredients.items
@@ -16,21 +16,17 @@ export const OrderCard: FC<OrderCardProps> = memo(({ order, onClick }) => {
   const orderInfo = useMemo(() => {
     if (!ingredients.length) return null;
 
-    const ingredientsInfo = order.ingredients.reduce(
-      (acc: TIngredient[], item: string) => {
-        const ingredient = ingredients.find((ing) => ing._id === item);
-        if (ingredient) return [...acc, ingredient];
-        return acc;
+    const ingredientsInfo = order.ingredients.reduce<TIngredient[]>(
+      (acc, id) => {
+        const ing = ingredients.find((x) => x._id === id);
+        return ing ? [...acc, ing] : acc;
       },
       []
     );
 
-    const total = ingredientsInfo.reduce((acc, item) => acc + item.price, 0);
+    const total = ingredientsInfo.reduce((acc, x) => acc + x.price, 0);
     const ingredientsToShow = ingredientsInfo.slice(0, maxIngredients);
-    const remains =
-      ingredientsInfo.length > maxIngredients
-        ? ingredientsInfo.length - maxIngredients
-        : 0;
+    const remains = Math.max(ingredientsInfo.length - maxIngredients, 0);
     const date = new Date(order.createdAt);
 
     return {
@@ -46,12 +42,10 @@ export const OrderCard: FC<OrderCardProps> = memo(({ order, onClick }) => {
   if (!orderInfo) return null;
 
   return (
-    <div onClick={onClick} style={{ cursor: 'pointer' }}>
-      <OrderCardUI
-        orderInfo={orderInfo}
-        maxIngredients={maxIngredients}
-        locationState={{ background: location }}
-      />
-    </div>
+    <OrderCardUI
+      orderInfo={orderInfo}
+      maxIngredients={maxIngredients}
+      locationState={{ background: location }}
+    />
   );
 });

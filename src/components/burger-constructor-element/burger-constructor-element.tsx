@@ -24,7 +24,7 @@ export const BurgerConstructorElement: FC<BurgerConstructorElementProps> = memo(
     };
 
     const handleClose = () => {
-      dispatch(removeIngredient(ingredient.uuid));
+      dispatch(removeIngredient(ingredient.id));
     };
 
     return (

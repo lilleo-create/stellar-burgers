@@ -16,12 +16,6 @@ export const IngredientDetails: FC = () => {
     error
   } = useAppSelector((state) => state.ingredients);
 
-  useEffect(() => {
-    if (ingredients.length === 0) {
-      dispatch(fetchIngredients());
-    }
-  }, [dispatch, ingredients.length]);
-
   const ingredientData: TIngredient | undefined = ingredients.find(
     (item) => item._id === id
   );
