@@ -1,13 +1,35 @@
-import { FC } from 'react';
+import { FC, useEffect } from 'react';
+import { useParams } from 'react-router-dom';
+import { useAppSelector, useAppDispatch } from '../../services/store';
 import { Preloader } from '../ui/preloader';
 import { IngredientDetailsUI } from '../ui/ingredient-details';
+import { TIngredient } from '../../utils/types';
+import { fetchIngredients } from '../../services/slices/ingredientsSlice';
 
 export const IngredientDetails: FC = () => {
-  /** TODO: взять переменную из стора */
-  const ingredientData = null;
+  const { id } = useParams<{ id: string }>();
+  const dispatch = useAppDispatch();
 
-  if (!ingredientData) {
+  const {
+    items: ingredients,
+    isLoading,
+    error
+  } = useAppSelector((state) => state.ingredients);
+
+  const ingredientData: TIngredient | undefined = ingredients.find(
+    (item) => item._id === id
+  );
+
+  if (isLoading || !ingredientData) {
     return <Preloader />;
+  }
+
+  if (error) {
+    return (
+      <p className='text text_type_main-default text_color_inactive'>
+        Ошибка загрузки ингредиентов: {error}
+      </p>
+    );
   }
 
   return <IngredientDetailsUI ingredientData={ingredientData} />;

@@ -1,4 +1,6 @@
 .burger_constructor {
+  position: sticky;
+  top: 100px;
   width: 600px;
   color: #f2f2f3;
   display: flex;

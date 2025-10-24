@@ -37,4 +37,9 @@ export type TUser = {
   name: string;
 };
 
+export type TUserResponse = {
+  success: boolean;
+  user: TUser;
+};
+
 export type TTabMode = 'bun' | 'sauce' | 'main';
