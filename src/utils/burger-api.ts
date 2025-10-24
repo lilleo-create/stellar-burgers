@@ -1,7 +1,8 @@
 import { setCookie, getCookie } from './cookie';
 import { TIngredient, TOrder, TUser, TUserResponse } from './types';
 
-const URL = process.env.BURGER_API_URL ?? 'https://norma.education-services.ru/api';
+const URL =
+  process.env.BURGER_API_URL ?? 'https://norma.education-services.ru/api';
 // временная диагностика
 console.log('API BASE =', URL);
 
