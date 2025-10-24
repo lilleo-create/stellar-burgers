@@ -10,6 +10,9 @@ import { TConstructorIngredient } from '@utils-types';
 import { BurgerConstructorElement, Modal } from '@components';
 import { Preloader, OrderDetailsUI } from '@ui';
 
+// src/components/ui/burger-constructor/burger-constructor.tsx
+// ...импорты как у тебя
+
 export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
   constructorItems,
   orderRequest,
@@ -26,7 +29,10 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
   return (
     <section className={styles.burger_constructor}>
       {bun ? (
-        <div className={`${styles.element} mb-4 mr-4`}>
+        <div
+          data-testid='constructor-buns'
+          className={`${styles.element} mb-4 mr-4`}
+        >
           <ConstructorElement
             type='top'
             isLocked
@@ -37,13 +43,14 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
         </div>
       ) : (
         <div
+          data-testid='constructor-buns'
           className={`${styles.noBuns} ${styles.noBunsTop} ml-8 mb-4 mr-5 text text_type_main-default`}
         >
           Выберите булки
         </div>
       )}
 
-      <ul className={styles.elements}>
+      <ul className={styles.elements} data-testid='constructor-fillings'>
         {ingredients?.length > 0 ? (
           (ingredients as IngredientWithUuid[]).map((item, index) => (
             <BurgerConstructorElement
@@ -86,6 +93,7 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
           <CurrencyIcon type='primary' />
         </div>
         <Button
+          data-testid='order-button'
           htmlType='button'
           type='primary'
           size='large'
@@ -97,17 +105,21 @@ export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
       </div>
 
       {orderRequest && (
-        <Modal onClose={closeOrderModal} title='Оформляем заказ...'>
-          <Preloader />
-        </Modal>
+        <div data-testid='modal' style={{ display: 'contents' }}>
+          <Modal onClose={closeOrderModal} title='Оформляем заказ...'>
+            <Preloader />
+          </Modal>
+        </div>
       )}
       {orderModalData && (
-        <Modal
-          onClose={closeOrderModal}
-          title={orderRequest ? 'Оформляем заказ...' : ''}
-        >
-          <OrderDetailsUI orderNumber={orderModalData.number} />
-        </Modal>
+        <div data-testid='modal' style={{ display: 'contents' }}>
+          <Modal
+            onClose={closeOrderModal}
+            title={orderRequest ? 'Оформляем заказ...' : ''}
+          >
+            <OrderDetailsUI orderNumber={orderModalData.number} />
+          </Modal>
+        </div>
       )}
     </section>
   );
