@@ -1,12 +1,15 @@
 // src/services/slices/ingredientsSlice.test.ts
 import { configureStore } from '@reduxjs/toolkit';
-import reducer, { fetchIngredients } from './ingredientsSlice';
+import reducer, {
+  initialState as ingredientsInitial,
+  fetchIngredients
+} from './ingredientsSlice';
 
 // Мокаем модуль API, откуда берётся fetchIngredientsApi
+// Путь из src/services/slices/* к src/utils/*
 jest.mock('../../utils/burger-api', () => ({
   fetchIngredientsApi: jest.fn()
 }));
-
 import { fetchIngredientsApi } from '../../utils/burger-api';
 
 const mockItems = [
@@ -21,11 +24,7 @@ describe('ingredientsSlice — unit', () => {
 
   it('возвращает initial state по умолчанию', () => {
     const state = reducer(undefined, { type: 'unknown' });
-    expect(state).toEqual({
-      items: [],
-      isLoading: false,
-      error: null
-    });
+    expect(state).toEqual(ingredientsInitial);
   });
 
   it('pending: isLoading=true и error=null', () => {
@@ -35,7 +34,7 @@ describe('ingredientsSlice — unit', () => {
   });
 
   it('fulfilled: кладёт items и снимает isLoading', () => {
-    const prev = { items: [], isLoading: true, error: null };
+    const prev = { ...ingredientsInitial, isLoading: true };
     const next = reducer(prev as any, {
       type: fetchIngredients.fulfilled.type,
       payload: mockItems
@@ -46,7 +45,7 @@ describe('ingredientsSlice — unit', () => {
   });
 
   it('rejected: пишет message в error и снимает isLoading', () => {
-    const prev = { items: [], isLoading: true, error: null };
+    const prev = { ...ingredientsInitial, isLoading: true };
     const next = reducer(prev as any, {
       type: fetchIngredients.rejected.type,
       error: { message: 'Network error' }

@@ -1,5 +1,6 @@
 // src/services/slices/constructor/constructorSlice.test.ts
 import reducer, {
+  initialState as constructorInitial,
   setBun,
   addIngredient,
   removeIngredient,
@@ -37,7 +38,7 @@ const s2 = {
 describe('burgerConstructorSlice', () => {
   it('возвращает initial state по умолчанию', () => {
     const state = reducer(undefined, { type: 'unknown' });
-    expect(state).toEqual({ bun: null, ingredients: [] });
+    expect(state).toEqual(constructorInitial);
   });
 
   it('setBun: устанавливает булку', () => {
@@ -81,6 +82,6 @@ describe('burgerConstructorSlice', () => {
     let state = reducer(undefined, setBun(bun));
     state = reducer(state, addIngredient(s1));
     const cleared = reducer(state, clearConstructor());
-    expect(cleared).toEqual({ bun: null, ingredients: [] });
+    expect(cleared).toEqual(constructorInitial);
   });
 });

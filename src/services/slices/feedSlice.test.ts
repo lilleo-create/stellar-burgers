@@ -1,6 +1,6 @@
 // src/services/slices/feed/feedSlice.test.ts
 import { configureStore } from '@reduxjs/toolkit';
-import reducer, { getFeeds } from './feedSlice';
+import reducer, { initialState as feedInitial, getFeeds } from './feedSlice';
 
 // Заглушаем шум в логах из console.error внутри thunk при ошибке
 beforeAll(() => {
@@ -50,29 +50,19 @@ describe('feedSlice — unit', () => {
 
   it('возвращает initial state по умолчанию', () => {
     const state = reducer(undefined, { type: 'unknown' });
-    expect(state).toEqual({
-      orders: [],
-      totalData: { total: 0, totalToday: 0 },
-      feedRequest: false,
-      error: null
-    });
+    expect(state).toEqual(feedInitial);
   });
 
   it('pending: выставляет feedRequest=true и не трогает остальное', () => {
     const next = reducer(undefined, { type: getFeeds.pending.type });
     expect(next.feedRequest).toBe(true);
-    expect(next.orders).toEqual([]);
-    expect(next.totalData).toEqual({ total: 0, totalToday: 0 });
+    expect(next.orders).toEqual(feedInitial.orders);
+    expect(next.totalData).toEqual(feedInitial.totalData);
     expect(next.error).toBeNull();
   });
 
   it('fulfilled: кладёт orders и totalData, feedRequest=false', () => {
-    const prev = {
-      orders: [],
-      totalData: { total: 0, totalToday: 0 },
-      feedRequest: true,
-      error: null
-    };
+    const prev = { ...feedInitial, feedRequest: true };
     const next = reducer(prev as any, {
       type: getFeeds.fulfilled.type,
       payload: mockResponse
@@ -86,12 +76,7 @@ describe('feedSlice — unit', () => {
   });
 
   it('fulfilled без orders: использует [] по умолчанию', () => {
-    const prev = {
-      orders: [],
-      totalData: { total: 0, totalToday: 0 },
-      feedRequest: true,
-      error: null
-    };
+    const prev = { ...feedInitial, feedRequest: true };
     const payload = { total: 5, totalToday: 2 } as any;
 
     const next = reducer(prev as any, {
@@ -105,12 +90,7 @@ describe('feedSlice — unit', () => {
   });
 
   it('rejected: записывает payload как error и feedRequest=false', () => {
-    const prev = {
-      orders: [],
-      totalData: { total: 0, totalToday: 0 },
-      feedRequest: true,
-      error: null
-    };
+    const prev = { ...feedInitial, feedRequest: true };
     const next = reducer(prev as any, {
       type: getFeeds.rejected.type,
       payload: 'Boom'

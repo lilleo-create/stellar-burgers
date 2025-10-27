@@ -42,7 +42,7 @@ interface OrderState {
   userOrders: TOrder[];
 }
 
-const initialState: OrderState = {
+export const initialState: OrderState = {
   orderData: null,
   orderRequest: false,
   orderFailed: false,

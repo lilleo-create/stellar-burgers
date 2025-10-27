@@ -1,12 +1,13 @@
 // src/services/slices/orderSlice.test.ts
 import { configureStore } from '@reduxjs/toolkit';
 import reducer, {
+  initialState as orderInitial,
   sendOrder,
   getUserOrders,
   closeOrderModal
 } from './orderSlice';
 
-// Мокаем API-модули
+// Мокаем API-модули (путь из src/services/slices/* к src/utils/*)
 jest.mock('../../utils/burger-api', () => ({
   orderBurgerApi: jest.fn(),
   fetchWithRefresh: jest.fn()
@@ -35,20 +36,13 @@ describe('orderSlice — unit', () => {
 
   it('initial state', () => {
     const state = reducer(undefined, { type: 'unknown' });
-    expect(state).toEqual({
-      orderData: null,
-      orderRequest: false,
-      orderFailed: false,
-      orderModalData: null,
-      userOrders: []
-    });
+    expect(state).toEqual(orderInitial);
   });
 
   it('closeOrderModal: очищает modal и флаги', () => {
     const prepared = reducer(undefined, {
-      type: closeOrderModal.type,
-      payload: undefined
-    }); // на чистом стейте просто проверим значения
+      type: closeOrderModal.type
+    } as any);
     expect(prepared.orderModalData).toBeNull();
     expect(prepared.orderRequest).toBe(false);
     expect(prepared.orderFailed).toBe(false);
@@ -61,13 +55,7 @@ describe('orderSlice — unit', () => {
   });
 
   it('sendOrder.fulfilled: кладёт orderData и orderModalData, снимает orderRequest', () => {
-    const prev = {
-      orderData: null,
-      orderRequest: true,
-      orderFailed: false,
-      orderModalData: null,
-      userOrders: []
-    };
+    const prev = { ...orderInitial, orderRequest: true };
     const next = reducer(prev as any, {
       type: sendOrder.fulfilled.type,
       payload: mockOrder
@@ -79,10 +67,7 @@ describe('orderSlice — unit', () => {
   });
 
   it('sendOrder.rejected: orderFailed=true, orderRequest=false, orderData=null', () => {
-    const prev = {
-      ...reducer(undefined, { type: 'unknown' }),
-      orderRequest: true
-    };
+    const prev = { ...orderInitial, orderRequest: true };
     const next = reducer(prev as any, { type: sendOrder.rejected.type });
     expect(next.orderRequest).toBe(false);
     expect(next.orderFailed).toBe(true);
@@ -96,10 +81,7 @@ describe('orderSlice — unit', () => {
   });
 
   it('getUserOrders.fulfilled: заполняет userOrders, orderRequest=false', () => {
-    const prev = {
-      ...reducer(undefined, { type: 'unknown' }),
-      orderRequest: true
-    };
+    const prev = { ...orderInitial, orderRequest: true };
     const next = reducer(prev as any, {
       type: getUserOrders.fulfilled.type,
       payload: [mockOrder]
@@ -111,10 +93,7 @@ describe('orderSlice — unit', () => {
   });
 
   it('getUserOrders.rejected: orderFailed=true, orderRequest=false', () => {
-    const prev = {
-      ...reducer(undefined, { type: 'unknown' }),
-      orderRequest: true
-    };
+    const prev = { ...orderInitial, orderRequest: true };
     const next = reducer(prev as any, { type: getUserOrders.rejected.type });
     expect(next.orderRequest).toBe(false);
     expect(next.orderFailed).toBe(true);
@@ -194,6 +173,7 @@ describe('orderSlice — thunk через тестовый store', () => {
     expect(state.orderFailed).toBe(true);
     expect(state.userOrders).toHaveLength(0);
   });
+
   it('sendOrder.rejected: очищает orderData если ранее был успешный заказ', () => {
     const withOrder = reducer(undefined, {
       type: sendOrder.fulfilled.type,

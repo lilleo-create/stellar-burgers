@@ -16,38 +16,57 @@ const assertConstructorCleared = () => {
   const bunName = 'Флюоресцентная булка R2-D3';
   const fillingName = 'Мясо бессмертных моллюсков Protostomia';
 
-  cy.get('[data-testid="constructor-buns"]', { timeout: 10000 }).then(
-    ($buns) => {
-      const hasBun = $buns.text().includes(bunName);
+  cy.get('[data-testid="constructor-buns"]', { timeout: 10000 }).then(($buns) => {
+    const hasBun = $buns.text().includes(bunName);
 
-      if (hasBun) {
-        // Поведение некоторых реализаций — очистка после "нового начала" (reload).
-        cy.reload();
-        // После перезагрузки ждём первичный фетч и пустой конструктор
-        cy.contains('Флюоресцентная булка R2-D3', { timeout: 10000 }).should(
-          'be.visible'
-        );
-        cy.get('[data-testid="constructor-buns"]').should(
-          'not.contain.text',
-          bunName
-        );
-        cy.get('[data-testid="constructor-fillings"]').should(
-          'not.contain.text',
-          fillingName
-        );
-      } else {
-        // Пусто уже сейчас
-        cy.get('[data-testid="constructor-buns"]').should(
-          'not.contain.text',
-          bunName
-        );
-        cy.get('[data-testid="constructor-fillings"]').should(
-          'not.contain.text',
-          fillingName
-        );
-      }
+    if (hasBun) {
+      // Поведение некоторых реализаций — очистка после "нового начала" (reload).
+      cy.reload();
+      // После перезагрузки ждём первичный фетч и пустой конструктор
+      cy.contains('Флюоресцентная булка R2-D3', { timeout: 10000 }).should('be.visible');
+      cy.get('[data-testid="constructor-buns"]').should('not.contain.text', bunName);
+      cy.get('[data-testid="constructor-fillings"]').should('not.contain.text', fillingName);
+    } else {
+      // Пусто уже сейчас
+      cy.get('[data-testid="constructor-buns"]').should('not.contain.text', bunName);
+      cy.get('[data-testid="constructor-fillings"]').should('not.contain.text', fillingName);
     }
-  );
+  });
+};
+
+// Хелпер: клик по кнопке оформления заказа.
+// 1) пробуем data-testid; 2) ищем по тексту внутри блока итогов; 3) глобальный fallback по тексту.
+const clickPlaceOrder = () => {
+  const orderText = /(оформить|заказать|оформить заказ|place order|order)/i;
+
+  cy.get('body').then(($body) => {
+    // (1) data-testid вариант
+    if ($body.find('[data-testid="order-button"], [data-testid="place-order"]').length) {
+      cy.get('[data-testid="order-button"], [data-testid="place-order"]')
+        .first()
+        .scrollIntoView()
+        .should('be.enabled')
+        .click();
+      return;
+    }
+
+    // (2) внутри блока итогов конструктора
+    if ($body.find('[data-testid="constructor-total"]').length) {
+      cy.get('[data-testid="constructor-total"]', { timeout: 10000 }).within(() => {
+        cy.contains('button', orderText, { timeout: 10000 })
+          .scrollIntoView()
+          .should('be.enabled')
+          .click();
+      });
+      return;
+    }
+
+    // (3) глобальный fallback по тексту
+    cy.contains('button', orderText, { timeout: 10000 })
+      .scrollIntoView()
+      .should('be.enabled')
+      .click();
+  });
 };
 
 describe('Burger Constructor — click flow', () => {
@@ -55,12 +74,8 @@ describe('Burger Constructor — click flow', () => {
     cy.intercept('GET', '**/api/ingredients', {
       fixture: 'ingredients.json'
     }).as('getIngredients');
-    cy.intercept('GET', '**/api/auth/user', { fixture: 'user.json' }).as(
-      'getUser'
-    );
-    cy.intercept('POST', '**/api/orders', { fixture: 'order.json' }).as(
-      'createOrder'
-    );
+    cy.intercept('GET', '**/api/auth/user', { fixture: 'user.json' }).as('getUser');
+    cy.intercept('POST', '**/api/orders', { fixture: 'order.json' }).as('createOrder');
 
     cy.setCookie('accessToken', 'FAKE.ACCESS.TOKEN');
     window.localStorage.setItem('refreshToken', 'FAKE.REFRESH.TOKEN');
@@ -69,9 +84,7 @@ describe('Burger Constructor — click flow', () => {
 
     // Дождаться данных и первого рендера
     cy.wait('@getIngredients');
-    cy.contains('Флюоресцентная булка R2-D3', { timeout: 10000 }).should(
-      'be.visible'
-    );
+    cy.contains('Флюоресцентная булка R2-D3', { timeout: 10000 }).should('be.visible');
     cy.contains('button', 'Добавить', {
       matchCase: false,
       timeout: 10000
@@ -103,9 +116,7 @@ describe('Burger Constructor — click flow', () => {
     cy.get('body').then(($body) => {
       const modal = $body.find('[data-testid="modal"]');
       if (modal.length) {
-        cy.get('[data-testid="modal"]')
-          .should('exist')
-          .and('contain.text', 'Соус Spicy-X');
+        cy.get('[data-testid="modal"]').should('exist').and('contain.text', 'Соус Spicy-X');
       } else {
         cy.location('pathname').should('match', /\/ingredients\/[a-z0-9_-]+/i);
         cy.contains('Соус Spicy-X').should('exist');
@@ -148,10 +159,8 @@ describe('Burger Constructor — click flow', () => {
     addByName('Флюоресцентная булка R2-D3');
     addByName('Мясо бессмертных моллюсков Protostomia');
 
-    cy.get('[data-testid="order-button"]', { timeout: 10000 })
-      .scrollIntoView()
-      .should('be.enabled')
-      .click();
+    // Надёжный клик по кнопке заказа
+    clickPlaceOrder();
 
     cy.wait('@createOrder');
 

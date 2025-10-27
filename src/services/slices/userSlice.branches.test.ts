@@ -1,11 +1,15 @@
+// src/services/slices/userSlice.branches.test.ts
 import { configureStore } from '@reduxjs/toolkit';
 import reducer, {
+  initialState as userInitial,
   loginUser,
   registerUser,
   checkUserAuth,
   logout
 } from './userSlice';
 
+// Мокаем API-функции из burger-api
+// Путь из src/services/slices/* к src/utils/*
 jest.mock('../../utils/burger-api', () => ({
   getUserApi: jest.fn(),
   loginUserApi: jest.fn(),
@@ -30,6 +34,7 @@ import {
 const makeStore = () => configureStore({ reducer: { user: reducer } });
 const mockUser = { name: 'Max', email: 'm@x' } as any;
 
+// Тестовое окружение: cookie и localStorage
 beforeAll(() => {
   // @ts-ignore
   global.document = { cookie: '' };
@@ -40,12 +45,19 @@ beforeAll(() => {
     removeItem: jest.fn()
   };
 });
+
 beforeEach(() => {
   jest.clearAllMocks();
   (document as any).cookie = '';
   (localStorage.getItem as jest.Mock).mockReset();
   (localStorage.setItem as jest.Mock).mockReset();
   (localStorage.removeItem as jest.Mock).mockReset();
+});
+
+// (необязательный, но полезный) sanity-check без дублирования структуры
+test('initial state совпадает с экспортируемым initialState из слайса', () => {
+  const state = reducer(undefined, { type: 'unknown' });
+  expect(state).toEqual(userInitial);
 });
 
 test('loginUser: accessToken без "Bearer " записывается как есть', async () => {
@@ -72,15 +84,14 @@ test('registerUser: accessToken без "Bearer "', async () => {
   expect(document.cookie).toContain('accessToken=PLAIN');
 });
 
-// Заменить проблемный тест в userSlice.branches.test.ts
+// Заменяет проблемный тест из старого файла: проверка ветки rejected без payload
 test('checkUserAuth.rejected без reason => error="Auth failed"', async () => {
-  // редьюсер на чистом стейте + вручную задиспатчить rejected без payload
   const state = reducer(undefined, {
     type: checkUserAuth.rejected.type
   } as any);
   expect(state.isAuthChecked).toBe(true);
   expect(state.user).toBeNull();
-  expect(state.error).toBe('Auth failed'); // дефолтная ветка без payload
+  expect(state.error).toBe('Auth failed');
 });
 
 test('forgotPassword: успех и ошибка (покрываем try/catch в thunk)', async () => {

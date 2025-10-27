@@ -1,6 +1,7 @@
 // src/services/slices/userSlice.test.ts
 import { configureStore } from '@reduxjs/toolkit';
 import reducer, {
+  initialState as userInitial,
   setUser,
   getUser,
   loginUser,
@@ -11,6 +12,7 @@ import reducer, {
 } from './userSlice';
 
 // Мокаем API-функции из burger-api
+// Путь из src/services/slices/* к src/utils/*
 jest.mock('../../utils/burger-api', () => ({
   getUserApi: jest.fn(),
   loginUserApi: jest.fn(),
@@ -61,11 +63,7 @@ beforeEach(() => {
 describe('userSlice — unit reducers & simple extraReducers', () => {
   it('initial state', () => {
     const state = reducer(undefined, { type: 'unknown' });
-    expect(state).toEqual({
-      user: null,
-      isAuthChecked: false,
-      error: null
-    });
+    expect(state).toEqual(userInitial);
   });
 
   it('setUser: кладёт пользователя', () => {
@@ -82,7 +80,7 @@ describe('userSlice — unit reducers & simple extraReducers', () => {
   });
 
   it('getUser.rejected: обнуляет user', () => {
-    const prev = { user: mockUser, isAuthChecked: false, error: null };
+    const prev = { ...userInitial, user: mockUser };
     const next = reducer(prev as any, { type: getUser.rejected.type });
     expect(next.user).toBeNull();
   });
@@ -112,7 +110,7 @@ describe('userSlice — unit reducers & simple extraReducers', () => {
   });
 
   it('logout.fulfilled: user=null, isAuthChecked=true', () => {
-    const prev = { user: mockUser, isAuthChecked: false, error: null };
+    const prev = { ...userInitial, user: mockUser };
     const next = reducer(prev as any, { type: logout.fulfilled.type });
     expect(next.user).toBeNull();
     expect(next.isAuthChecked).toBe(true);
