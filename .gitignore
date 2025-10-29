@@ -2,3 +2,18 @@ node_modules
 .env
 .idea
 dist
+
+# macOS
+.DS_Store
+
+# Cypress
+cypress/screenshots/
+cypress/videos/
+cypress/downloads/
+
+# Build
+/dist
+
+# Env
+.env
+

@@ -12,7 +12,7 @@ type FeedState = {
   error: string | null;
 };
 
-const initialState: FeedState = {
+export const initialState: FeedState = {
   orders: [],
   totalData: { total: 0, totalToday: 0 },
   feedRequest: false,

@@ -2,8 +2,9 @@ import { setCookie, getCookie } from './cookie';
 import { TIngredient, TOrder, TUser, TUserResponse } from './types';
 
 const URL =
-  process.env.REACT_APP_BURGER_API_URL ||
-  'https://norma.nomoreparties.space/api';
+  process.env.BURGER_API_URL ?? 'https://norma.education-services.ru/api';
+// временная диагностика
+console.log('API BASE =', URL);
 
 const checkResponse = async <T>(res: unknown): Promise<T> => {
   const response = res as Response;
