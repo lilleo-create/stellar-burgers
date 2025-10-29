@@ -20,7 +20,7 @@ export const BurgerIngredient: FC<TBurgerIngredientProps> = memo(
     };
 
     return (
-      <div data-testid="ingredient-card">
+      <div data-testid='ingredient-card'>
         <BurgerIngredientUI
           ingredient={ingredient}
           count={count}

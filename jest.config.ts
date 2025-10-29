@@ -2,18 +2,17 @@ import type { Config } from 'jest';
 
 const config: Config = {
   preset: 'ts-jest',
-  testEnvironment: 'node', // для редьюсеров/селектора хватает node
+  testEnvironment: 'node',
   roots: ['<rootDir>/src'],
   moduleFileExtensions: ['ts', 'tsx', 'js', 'json'],
   transform: { '^.+\\.(ts|tsx)$': ['ts-jest', { tsconfig: 'tsconfig.json' }] },
   moduleNameMapper: {
     '\\.(css|scss|sass)$': 'identity-obj-proxy',
-    '^@/(.*)$': '<rootDir>/src/$1' // если используешь алиасы
+    '^@/(.*)$': '<rootDir>/src/$1'
   },
   setupFilesAfterEnv: ['<rootDir>/src/tests/jest.setup.ts'],
   collectCoverageFrom: [
-    'src/services/slices/**/*.ts' // покрываем слайсы
-    // 'src/services/selectors/**/*.ts', // (опц.) селекторы
+    'src/services/slices/**/*.ts'
   ],
   coveragePathIgnorePatterns: [
     '/node_modules/',
@@ -21,7 +20,7 @@ const config: Config = {
     'src/pages/',
     'src/components/',
     'src/index.tsx',
-    'src/utils/' // если пока не тестируешь API/утилиты
+    'src/utils/'
   ],
   coverageReporters: ['text', 'text-summary', 'lcov']
 };

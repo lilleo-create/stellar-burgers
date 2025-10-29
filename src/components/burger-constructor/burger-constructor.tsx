@@ -61,7 +61,7 @@ export const BurgerConstructor: FC = () => {
   };
 
   return (
-    <div data-testid="constructor-root">
+    <div data-testid='constructor-root'>
       <BurgerConstructorUI
         price={price}
         orderRequest={orderRequest}

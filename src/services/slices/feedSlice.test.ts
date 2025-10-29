@@ -1,8 +1,6 @@
-// src/services/slices/feed/feedSlice.test.ts
 import { configureStore } from '@reduxjs/toolkit';
 import reducer, { initialState as feedInitial, getFeeds } from './feedSlice';
 
-// Заглушаем шум в логах из console.error внутри thunk при ошибке
 beforeAll(() => {
   jest.spyOn(console, 'error').mockImplementation(() => {});
 });
@@ -10,7 +8,6 @@ afterAll(() => {
   (console.error as jest.Mock).mockRestore?.();
 });
 
-// Мокаем модуль API, откуда берётся getFeedsApi
 jest.mock('../../utils/burger-api', () => ({
   getFeedsApi: jest.fn()
 }));

@@ -10,9 +10,6 @@ import { TConstructorIngredient } from '@utils-types';
 import { BurgerConstructorElement, Modal } from '@components';
 import { Preloader, OrderDetailsUI } from '@ui';
 
-// src/components/ui/burger-constructor/burger-constructor.tsx
-// ...импорты как у тебя
-
 export const BurgerConstructorUI: FC<BurgerConstructorUIProps> = ({
   constructorItems,
   orderRequest,

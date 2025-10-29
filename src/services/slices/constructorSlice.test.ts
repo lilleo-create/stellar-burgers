@@ -1,4 +1,3 @@
-// src/services/slices/constructor/constructorSlice.test.ts
 import reducer, {
   initialState as constructorInitial,
   setBun,
@@ -8,7 +7,6 @@ import reducer, {
   clearConstructor
 } from './constructorSlice';
 
-// Мокаем nanoid, т.к. он импортируется из @reduxjs/toolkit внутри slice
 jest.mock('@reduxjs/toolkit', () => {
   const actual = jest.requireActual('@reduxjs/toolkit');
   return { ...actual, nanoid: () => 'test-uuid' };

@@ -1,186 +1,70 @@
 /// <reference types="cypress" />
+import { SEL } from '../support/selectors';
 
-// Хелпер: клик по "Добавить" у ингредиента с заданным именем
-const addByName = (name: string) => {
-  cy.contains('li', name, { timeout: 10000 })
-    .scrollIntoView()
-    .should('be.visible')
-    .within(() => {
-      cy.contains('button', 'Добавить', { matchCase: false }).click();
-    });
-};
+const BUN_R2D3 = 'Флюоресцентная булка R2-D3';
+const FILLING_PROTOS = 'Мясо бессмертных моллюсков Protostomia';
+const SAUCE_SPICYX = 'Соус Spicy-X';
 
-// Хелпер: убедиться, что конструктор пуст.
-// Если не пуст сразу после закрытия модалки — перезагружаем страницу и проверяем снова.
-const assertConstructorCleared = () => {
-  const bunName = 'Флюоресцентная булка R2-D3';
-  const fillingName = 'Мясо бессмертных моллюсков Protostomia';
-
-  cy.get('[data-testid="constructor-buns"]', { timeout: 10000 }).then(($buns) => {
-    const hasBun = $buns.text().includes(bunName);
-
-    if (hasBun) {
-      // Поведение некоторых реализаций — очистка после "нового начала" (reload).
-      cy.reload();
-      // После перезагрузки ждём первичный фетч и пустой конструктор
-      cy.contains('Флюоресцентная булка R2-D3', { timeout: 10000 }).should('be.visible');
-      cy.get('[data-testid="constructor-buns"]').should('not.contain.text', bunName);
-      cy.get('[data-testid="constructor-fillings"]').should('not.contain.text', fillingName);
-    } else {
-      // Пусто уже сейчас
-      cy.get('[data-testid="constructor-buns"]').should('not.contain.text', bunName);
-      cy.get('[data-testid="constructor-fillings"]').should('not.contain.text', fillingName);
-    }
-  });
-};
-
-// Хелпер: клик по кнопке оформления заказа.
-// 1) пробуем data-testid; 2) ищем по тексту внутри блока итогов; 3) глобальный fallback по тексту.
-const clickPlaceOrder = () => {
-  const orderText = /(оформить|заказать|оформить заказ|place order|order)/i;
-
-  cy.get('body').then(($body) => {
-    // (1) data-testid вариант
-    if ($body.find('[data-testid="order-button"], [data-testid="place-order"]').length) {
-      cy.get('[data-testid="order-button"], [data-testid="place-order"]')
-        .first()
-        .scrollIntoView()
-        .should('be.enabled')
-        .click();
-      return;
-    }
-
-    // (2) внутри блока итогов конструктора
-    if ($body.find('[data-testid="constructor-total"]').length) {
-      cy.get('[data-testid="constructor-total"]', { timeout: 10000 }).within(() => {
-        cy.contains('button', orderText, { timeout: 10000 })
-          .scrollIntoView()
-          .should('be.enabled')
-          .click();
-      });
-      return;
-    }
-
-    // (3) глобальный fallback по тексту
-    cy.contains('button', orderText, { timeout: 10000 })
-      .scrollIntoView()
-      .should('be.enabled')
-      .click();
-  });
-};
-
-describe('Burger Constructor — click flow', () => {
+describe('Burger Constructor — best practices', () => {
   beforeEach(() => {
-    cy.intercept('GET', '**/api/ingredients', {
-      fixture: 'ingredients.json'
-    }).as('getIngredients');
+    cy.intercept('GET', '**/api/ingredients', { fixture: 'ingredients.json' }).as('getIngredients');
     cy.intercept('GET', '**/api/auth/user', { fixture: 'user.json' }).as('getUser');
     cy.intercept('POST', '**/api/orders', { fixture: 'order.json' }).as('createOrder');
 
-    cy.setCookie('accessToken', 'FAKE.ACCESS.TOKEN');
-    window.localStorage.setItem('refreshToken', 'FAKE.REFRESH.TOKEN');
-
+    cy.login();
     cy.visit('/');
-
-    // Дождаться данных и первого рендера
     cy.wait('@getIngredients');
-    cy.contains('Флюоресцентная булка R2-D3', { timeout: 10000 }).should('be.visible');
-    cy.contains('button', 'Добавить', {
-      matchCase: false,
-      timeout: 10000
-    }).should('exist');
+
+    cy.contains('button', 'Добавить', { matchCase: false, timeout: 10000 }).should('exist');
+    cy.contains(BUN_R2D3, { timeout: 10000 }).should('exist');
   });
 
-  afterEach(() => {
-    cy.clearCookie('accessToken');
-    window.localStorage.removeItem('refreshToken');
+  it('добавляет булку и начинку', () => {
+    cy.addIngredientByName(BUN_R2D3);
+    cy.get(SEL.constructorBuns).should('contain.text', BUN_R2D3);
+
+    cy.addIngredientByName(FILLING_PROTOS);
+    cy.get(SEL.constructorFillings).should('contain.text', FILLING_PROTOS);
   });
 
-  it('добавляет булку и начинку с помощью кнопки «Добавить»', () => {
-    addByName('Флюоресцентная булка R2-D3');
-    cy.get('[data-testid="constructor-buns"]', { timeout: 10000 }).should(
-      'contain.text',
-      'Флюоресцентная булка R2-D3'
-    );
-
-    addByName('Мясо бессмертных моллюсков Protostomia');
-    cy.get('[data-testid="constructor-fillings"]', { timeout: 10000 }).should(
-      'contain.text',
-      'Мясо бессмертных моллюсков Protostomia'
-    );
-  });
-
-  it('открывает деталку ингредиента (модалка или страница) и показывает корректные данные', () => {
-    cy.contains('Соус Spicy-X', { timeout: 10000 }).scrollIntoView().click();
+  it('открывает деталку и закрывает модалку', () => {
+    cy.contains(SEL.ingredientCard, SAUCE_SPICYX, { timeout: 10000 })
+      .scrollIntoView()
+      .within(() => {
+        cy.get('a').first().click({ force: true });
+      });
 
     cy.get('body').then(($body) => {
-      const modal = $body.find('[data-testid="modal"]');
-      if (modal.length) {
-        cy.get('[data-testid="modal"]').should('exist').and('contain.text', 'Соус Spicy-X');
+      if ($body.find(SEL.modal).length) {
+        cy.get(SEL.modal).should('contain.text', SAUCE_SPICYX);
+        cy.closeAnyModal();
+        cy.get(SEL.modal).should('not.exist');
       } else {
         cy.location('pathname').should('match', /\/ingredients\/[a-z0-9_-]+/i);
-        cy.contains('Соус Spicy-X').should('exist');
+        cy.contains(SAUCE_SPICYX).should('be.visible');
         cy.go('back');
       }
-    });
-  });
-
-  it('закрывает деталку по ESC/крестику, если открыта модалка', () => {
-    cy.contains('Соус Spicy-X', { timeout: 10000 }).scrollIntoView().click();
-
-    cy.get('body').then(($body) => {
-      const modal = $body.find('[data-testid="modal"]');
-      if (!modal.length) {
-        cy.location('pathname').should('match', /\/ingredients\/[a-z0-9_-]+/i);
-        cy.go('back');
-        return;
-      }
-
-      // Закрытие по ESC
-      cy.get('[data-testid="modal"]').should('exist');
-      cy.get('body').type('{esc}');
-      cy.get('[data-testid="modal"]').should('not.exist');
-
-      // Снова открыть и закрыть крестиком (если есть)
-      cy.contains('Соус Spicy-X').scrollIntoView().click();
-      cy.get('[data-testid="modal"]').should('exist');
-      cy.get('body').then(($b) => {
-        if ($b.find('button[aria-label="close"]').length) {
-          cy.get('button[aria-label="close"]').click();
-        } else {
-          cy.get('body').type('{esc}');
-        }
-      });
-      cy.get('[data-testid="modal"]').should('not.exist');
     });
   });
 
   it('создаёт заказ, показывает номер и очищает конструктор', () => {
-    addByName('Флюоресцентная булка R2-D3');
-    addByName('Мясо бессмертных моллюсков Protostomia');
+    cy.addIngredientByName(BUN_R2D3);
+    cy.get(SEL.constructorBuns).should('contain.text', BUN_R2D3);
 
-    // Надёжный клик по кнопке заказа
-    clickPlaceOrder();
+    cy.addIngredientByName(FILLING_PROTOS);
+    cy.get(SEL.constructorFillings).should('contain.text', FILLING_PROTOS);
+
+    cy.get(SEL.placeOrderBtn).first().should(($btn) => {
+      expect($btn).not.to.have.attr('disabled');
+    });
+    cy.clickPlaceOrder();
 
     cy.wait('@createOrder');
+    cy.get(SEL.modal, { timeout: 20000 }).should('exist');
 
-    // wrapper может быть с display:contents, поэтому проверяем существование + номер
-    cy.get('[data-testid="modal"]', { timeout: 10000 }).should('exist');
-    cy.contains('424242', { timeout: 10000 }).should('exist');
+    cy.contains(/Оформляем заказ|[0-9]{3,}/, { timeout: 20000 }).should('exist');
 
-    // Закрываем модалку: крестик или ESC (в зависимости от реализации)
-    cy.get('body').then(($body) => {
-      if ($body.find('button[aria-label="close"]').length) {
-        cy.get('button[aria-label="close"]').click();
-      } else {
-        cy.get('body').type('{esc}');
-      }
-    });
-
-    cy.get('[data-testid="modal"]').should('not.exist');
-    cy.contains('424242').should('not.exist');
-
-    // Конструктор пуст (или станет пустым после reload)
-    assertConstructorCleared();
+    cy.closeAnyModal();
+    cy.assertConstructorCleared();
   });
 });

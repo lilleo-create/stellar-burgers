@@ -1,4 +1,3 @@
-// src/services/slices/orderSlice.test.ts
 import { configureStore } from '@reduxjs/toolkit';
 import reducer, {
   initialState as orderInitial,
@@ -7,7 +6,6 @@ import reducer, {
   closeOrderModal
 } from './orderSlice';
 
-// Мокаем API-модули (путь из src/services/slices/* к src/utils/*)
 jest.mock('../../utils/burger-api', () => ({
   orderBurgerApi: jest.fn(),
   fetchWithRefresh: jest.fn()
@@ -145,7 +143,6 @@ describe('orderSlice — thunk через тестовый store', () => {
     const store = makeStore();
     await store.dispatch<any>(getUserOrders());
 
-    // Проверяем, что заголовок Authorization сформирован как в слайсе
     expect(fetchWithRefresh).toHaveBeenCalledTimes(1);
     const [url, options] = (fetchWithRefresh as jest.Mock).mock.calls[0];
     expect(url).toBe('https://norma.nomoreparties.space/api/orders');

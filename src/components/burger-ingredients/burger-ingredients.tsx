@@ -50,7 +50,7 @@ export const BurgerIngredients: FC = () => {
   };
 
   return (
-    <div data-testid="ingredients-root">
+    <div data-testid='ingredients-root'>
       <BurgerIngredientsUI
         currentTab={currentTab}
         buns={buns}

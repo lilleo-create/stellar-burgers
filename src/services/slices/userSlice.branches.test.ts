@@ -1,4 +1,3 @@
-// src/services/slices/userSlice.branches.test.ts
 import { configureStore } from '@reduxjs/toolkit';
 import reducer, {
   initialState as userInitial,
@@ -8,8 +7,6 @@ import reducer, {
   logout
 } from './userSlice';
 
-// Мокаем API-функции из burger-api
-// Путь из src/services/slices/* к src/utils/*
 jest.mock('../../utils/burger-api', () => ({
   getUserApi: jest.fn(),
   loginUserApi: jest.fn(),
@@ -34,7 +31,6 @@ import {
 const makeStore = () => configureStore({ reducer: { user: reducer } });
 const mockUser = { name: 'Max', email: 'm@x' } as any;
 
-// Тестовое окружение: cookie и localStorage
 beforeAll(() => {
   // @ts-ignore
   global.document = { cookie: '' };
@@ -54,7 +50,6 @@ beforeEach(() => {
   (localStorage.removeItem as jest.Mock).mockReset();
 });
 
-// (необязательный, но полезный) sanity-check без дублирования структуры
 test('initial state совпадает с экспортируемым initialState из слайса', () => {
   const state = reducer(undefined, { type: 'unknown' });
   expect(state).toEqual(userInitial);
@@ -68,7 +63,7 @@ test('loginUser: accessToken без "Bearer " записывается как е
   });
   const store = makeStore();
   await store.dispatch<any>(loginUser({ email: 'e', password: 'p' }));
-  expect(document.cookie).toContain('accessToken=RAW'); // ветка setAccessCookie без Bearer
+  expect(document.cookie).toContain('accessToken=RAW');
 });
 
 test('registerUser: accessToken без "Bearer "', async () => {
@@ -84,7 +79,6 @@ test('registerUser: accessToken без "Bearer "', async () => {
   expect(document.cookie).toContain('accessToken=PLAIN');
 });
 
-// Заменяет проблемный тест из старого файла: проверка ветки rejected без payload
 test('checkUserAuth.rejected без reason => error="Auth failed"', async () => {
   const state = reducer(undefined, {
     type: checkUserAuth.rejected.type
@@ -103,7 +97,7 @@ test('forgotPassword: успех и ошибка (покрываем try/catch �
   const mod = await import('./userSlice');
   const store = makeStore();
   await store.dispatch<any>(mod.forgotPassword({ email: 'a@a' }));
-  await store.dispatch<any>(mod.forgotPassword({ email: 'a@a' })); // ошибка
+  await store.dispatch<any>(mod.forgotPassword({ email: 'a@a' }));
 });
 
 test('resetPassword: успех и ошибка (try/catch в thunk)', async () => {
@@ -115,7 +109,7 @@ test('resetPassword: успех и ошибка (try/catch в thunk)', async () 
   const mod = await import('./userSlice');
   const store = makeStore();
   await store.dispatch<any>(mod.resetPassword({ password: 'x', token: 't' }));
-  await store.dispatch<any>(mod.resetPassword({ password: 'x', token: 't' })); // ошибка
+  await store.dispatch<any>(mod.resetPassword({ password: 'x', token: 't' }));
 });
 
 test('logout: даже при ошибке API токены чистятся в finally', async () => {
@@ -123,5 +117,5 @@ test('logout: даже при ошибке API токены чистятся в 
   const store = makeStore();
   await store.dispatch<any>(logout());
   expect(localStorage.removeItem).toHaveBeenCalledWith('refreshToken');
-  expect(document.cookie).toContain('accessToken='); // сброшено
+  expect(document.cookie).toContain('accessToken=');
 });

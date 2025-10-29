@@ -1,12 +1,9 @@
-// src/services/slices/ingredientsSlice.test.ts
 import { configureStore } from '@reduxjs/toolkit';
 import reducer, {
   initialState as ingredientsInitial,
   fetchIngredients
 } from './ingredientsSlice';
 
-// Мокаем модуль API, откуда берётся fetchIngredientsApi
-// Путь из src/services/slices/* к src/utils/*
 jest.mock('../../utils/burger-api', () => ({
   fetchIngredientsApi: jest.fn()
 }));

@@ -1,4 +1,3 @@
-// src/services/slices/userSlice.test.ts
 import { configureStore } from '@reduxjs/toolkit';
 import reducer, {
   initialState as userInitial,
@@ -11,8 +10,6 @@ import reducer, {
   checkUserAuth
 } from './userSlice';
 
-// Мокаем API-функции из burger-api
-// Путь из src/services/slices/* к src/utils/*
 jest.mock('../../utils/burger-api', () => ({
   getUserApi: jest.fn(),
   loginUserApi: jest.fn(),
@@ -40,7 +37,6 @@ const makeStore = () =>
     reducer: { user: reducer }
   });
 
-// Тестовое окружение: cookie и localStorage
 beforeAll(() => {
   // @ts-ignore
   global.document = { cookie: '' };
@@ -203,7 +199,6 @@ describe('userSlice — thunks via test store', () => {
 
     expect(logoutApi).toHaveBeenCalledTimes(1);
     expect(localStorage.removeItem).toHaveBeenCalledWith('refreshToken');
-    // clearTokens устанавливает cookie с Max-Age=0
     expect(document.cookie).toContain('accessToken=');
   });
 
@@ -232,13 +227,13 @@ describe('userSlice — thunks via test store', () => {
       expect(getUserApi).toHaveBeenCalledTimes(1);
       expect(state.user).toBeNull();
       expect(state.isAuthChecked).toBe(true);
-      expect(state.error).toBeNull(); // reason === 'no tokens'
+      expect(state.error).toBeNull();
     });
 
     it('рефреш успешен: первый getUserApi падает, refreshToken есть, затем ok', async () => {
       (getUserApi as jest.Mock)
-        .mockRejectedValueOnce(new Error('401')) // первый вызов упал
-        .mockResolvedValueOnce({ user: mockUser }); // второй успешный
+        .mockRejectedValueOnce(new Error('401'))
+        .mockResolvedValueOnce({ user: mockUser });
       (localStorage.getItem as jest.Mock).mockReturnValueOnce('REFRESH');
       (refreshToken as jest.Mock).mockResolvedValueOnce({
         accessToken: 'Bearer NEW',
@@ -272,7 +267,7 @@ describe('userSlice — thunks via test store', () => {
 
       const state = (store.getState() as any).user;
       expect(localStorage.removeItem).toHaveBeenCalledWith('refreshToken');
-      expect(document.cookie).toContain('accessToken='); // сброшено
+      expect(document.cookie).toContain('accessToken=');
       expect(state.user).toBeNull();
       expect(state.isAuthChecked).toBe(true);
       expect(state.error).toBe('refresh broke');
