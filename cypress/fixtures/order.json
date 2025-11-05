@@ -1,0 +1,5 @@
+{
+  "success": true,
+  "name": "Тестовый заказ",
+  "order": { "number": 424242 }
+}
